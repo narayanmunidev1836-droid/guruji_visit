@@ -14,7 +14,7 @@ import { diskLabelKey, eventNameKey, makeDupKey } from "../src/lib/normalize.js"
 
 const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DIRECT_URL ?? process.env.DATABASE_URL }) });
 
-const STARTER_EVENTS = ["Pathramani", "Vichran", "Sabha", "Utsav"];
+const STARTER_EVENTS = ["PATHRAMANI", "VICHRAN", "SABHA", "UTSAV"];
 
 async function seedAdmin() {
   const email = (process.env.SEED_ADMIN_EMAIL ?? "admin@example.org").trim().toLowerCase();

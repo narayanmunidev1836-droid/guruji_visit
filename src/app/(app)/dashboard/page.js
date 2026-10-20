@@ -132,7 +132,7 @@ export default async function DashboardPage() {
             </Link>
           </div>
           {data.recentVisits.length === 0 ? (
-            <EmptyState title="No visits yet" description="Add a visit to record which hard disk and folder hold a Haribhagat's photos." />
+            <EmptyState title="No visits yet" description="Add a visit to record which hard disk and path hold a Haribhagat's photos." />
           ) : (
             <div className="space-y-4">
               {data.recentVisits.map((visit) => (

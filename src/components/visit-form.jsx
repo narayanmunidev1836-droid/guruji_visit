@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { createVisitAction, updateVisitAction } from "@/actions/visits";
 import { ActionForm, Field, FormActions, SubmitButton } from "@/components/ui/form";
@@ -7,18 +8,36 @@ import { buttonClasses } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input, Select, Textarea } from "@/components/ui/inputs";
 import { HaribhagatPicker } from "@/components/haribhagat-picker";
+import { SavedEntryDialog } from "@/components/saved-entry-dialog";
 import { VisitPersonFields } from "@/components/visit-person-fields";
 
 /**
  * Create / edit a visit: Haribhagat(s) + the hard disk and folder where their photos are kept.
  * Event, date and place are required; notes are optional.
  */
-export function VisitForm({ visit, events, disks, placeTypes, selectedPeople, initialPerson, canSeeMobile = true, labels }) {
+export function VisitForm(props) {
+  // A new entry: after the "Entry saved" dialog is closed the whole form is replaced by a fresh, empty one.
+  const [round, setRound] = useState(0);
+  return (
+    <VisitFormFields
+      key={round}
+      {...props}
+      initialPerson={round === 0 ? props.initialPerson : null}
+      onNewEntry={() => {
+        setRound((value) => value + 1);
+        window.scrollTo({ top: 0 });
+      }}
+    />
+  );
+}
+
+function VisitFormFields({ visit, events, disks, placeTypes, selectedPeople, initialPerson, canSeeMobile = true, labels, onNewEntry }) {
   const editing = Boolean(visit);
   const action = editing ? updateVisitAction : createVisitAction;
   return (
     <ActionForm action={action}>
       {editing && <input type="hidden" name="id" value={visit.id} />}
+      {!editing && <SavedEntryDialog onClose={onNewEntry} />}
 
       <div className="space-y-4">
         {editing ? (

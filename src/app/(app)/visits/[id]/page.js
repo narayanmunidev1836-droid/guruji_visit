@@ -59,7 +59,7 @@ export default async function VisitPage({ params, searchParams }) {
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-6">
           <Card>
-            <CardHeader title="Where the photos are" description="Connect this hard disk and open this folder." />
+            <CardHeader title="Where the photos are" description="Connect this hard disk and open this path." />
             <CardBody>
               <VisitLocation visit={visit} />
               {visit.hardDisk && !visit.hardDisk.isActive && <p className="mt-2 text-xs text-warning">This hard disk is marked inactive.</p>}

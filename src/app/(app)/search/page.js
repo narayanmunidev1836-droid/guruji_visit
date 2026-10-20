@@ -26,7 +26,7 @@ export default async function SearchPage({ searchParams }) {
     <>
       <PageHeader
         title={t("search")}
-        description="Search a Haribhagat by name, surname, village or mobile. You see every visit of that Haribhagat with the hard disk and folder where the photos are kept."
+        description="Search a Haribhagat by name, surname, village or mobile. You see every visit of that Haribhagat with the hard disk and path where the photos are kept."
       />
 
       {raw.saved && (
@@ -40,7 +40,7 @@ export default async function SearchPage({ searchParams }) {
       <div className="mt-6">
         {result.items.length === 0 ? (
           result.latest ? (
-            <EmptyState title="No entries yet" description="Add a new entry to record which hard disk and folder hold a Haribhagat's photos." />
+            <EmptyState title="No entries yet" description="Add a new entry to record which hard disk and path hold a Haribhagat's photos." />
           ) : (
             <EmptyState title={t("noResults")} description="Try fewer filters or a different spelling. You can search in English and Gujarati." />
           )

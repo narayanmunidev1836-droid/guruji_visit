@@ -10,7 +10,7 @@ describe("haribhagat validation", () => {
   it("requires name and surname, everything else is optional", () => {
     const ok = validate(haribhagatSchema, valid);
     expect(ok.ok).toBe(true);
-    expect(ok.data).toMatchObject({ name: "Ramesh", surname: "Patel", fatherName: null, gam: null, pincode: null, mobileNo: null });
+    expect(ok.data).toMatchObject({ name: "RAMESH", surname: "PATEL", fatherName: null, gam: null, pincode: null, mobileNo: null });
 
     const bad = validate(haribhagatSchema, { name: "  ", surname: "" });
     expect(bad.ok).toBe(false);
@@ -20,7 +20,7 @@ describe("haribhagat validation", () => {
   it("normalizes whitespace and keeps mobile / pincode as strings", () => {
     const result = validate(haribhagatSchema, { ...valid, name: "  Ramesh   Kumar ", pincode: "012345", mobileNo: "+91 98765 43210" });
     expect(result.ok).toBe(true);
-    expect(result.data.name).toBe("Ramesh Kumar");
+    expect(result.data.name).toBe("RAMESH KUMAR");
     expect(result.data.pincode).toBe("012345");
     expect(typeof result.data.pincode).toBe("string");
     expect(result.data.mobileNo).toBe("9876543210");
@@ -81,18 +81,18 @@ describe("visit validation", () => {
 
 describe("visit folder", () => {
   it("keeps a relative folder and unifies separators", () => {
-    expect(parseVisitFolder(String.raw`MUKT SWAMI DATA\decstop`)).toEqual({ ok: true, folder: "MUKT SWAMI DATA/decstop" });
-    expect(parseVisitFolder("  2019/March/ ")).toEqual({ ok: true, folder: "2019/March" });
+    expect(parseVisitFolder(String.raw`MUKT SWAMI DATA\decstop`)).toEqual({ ok: true, folder: "MUKT SWAMI DATA/DECSTOP" });
+    expect(parseVisitFolder("  2019/March/ ")).toEqual({ ok: true, folder: "2019/MARCH" });
   });
 
   it("drops a pasted drive letter - it only says where the disk was mounted", () => {
-    expect(parseVisitFolder(String.raw`F:\MUKT SWAMI DATA\decstop`)).toEqual({ ok: true, folder: "MUKT SWAMI DATA/decstop" });
-    expect(parseVisitFolder("d:/photos")).toEqual({ ok: true, folder: "photos" });
+    expect(parseVisitFolder(String.raw`F:\MUKT SWAMI DATA\decstop`)).toEqual({ ok: true, folder: "MUKT SWAMI DATA/DECSTOP" });
+    expect(parseVisitFolder("d:/photos")).toEqual({ ok: true, folder: "PHOTOS" });
   });
 
   it("requires a folder and rejects '..'", () => {
-    expect(parseVisitFolder("").fieldErrors.folderPath).toBe("Folder is required.");
-    expect(parseVisitFolder(String.raw`F:`).fieldErrors.folderPath).toBe("Folder is required.");
+    expect(parseVisitFolder("").fieldErrors.folderPath).toBe("Path is required.");
+    expect(parseVisitFolder(String.raw`F:`).fieldErrors.folderPath).toBe("Path is required.");
     expect(parseVisitFolder("a/../b").ok).toBe(false);
   });
 });

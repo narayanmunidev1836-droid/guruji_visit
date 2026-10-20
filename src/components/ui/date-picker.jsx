@@ -37,6 +37,14 @@ export function DatePicker({ name, defaultValue = "", required = false, placehol
   const root = useRef(null);
 
   useEffect(() => {
+    const form = root.current?.closest("form");
+    if (!form) return undefined;
+    const onReset = () => setValue("");
+    form.addEventListener("reset", onReset);
+    return () => form.removeEventListener("reset", onReset);
+  }, []);
+
+  useEffect(() => {
     if (!open) return undefined;
     const onPointer = (event) => {
       if (root.current && !root.current.contains(event.target)) setOpen(false);

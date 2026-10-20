@@ -21,9 +21,9 @@ const DICTIONARY = {
   name: "Name",
   fatherName: "Father Name",
   surname: "Surname",
-  gam: "Gam (Village)",
+  gam: "Village",
   taluko: "Taluko",
-  jillo: "Jillo (District)",
+  jillo: "District",
   pincode: "Pincode",
   mobileNo: "Mobile No",
 
@@ -35,7 +35,7 @@ const DICTIONARY = {
   hardDiskName: "Hard Disk Name",
   placeType: "Place type",
   relativePath: "Relative path",
-  folder: "Folder",
+  folder: "Path",
   notes: "Notes",
   photos: "Photos",
   photo: "Photo",
@@ -62,7 +62,7 @@ const DICTIONARY = {
   activate: "Activate",
   deactivate: "Deactivate",
   openOriginal: "Open original",
-  copyPath: "Copy folder",
+  copyPath: "Copy path",
   copied: "Copied",
 
   // status

@@ -47,11 +47,11 @@ Search URL parameters (`/search`): `q, name, fatherName, surname, gam, taluko, j
 |---|---|---|
 | `auth.js` | `loginAction`, `logoutAction`, `changePasswordAction` | public / login |
 | `haribhagats.js` | `saveHaribhagatAction` (create/edit, duplicate warning, `confirmDuplicate=1`), `pickerSearchAction` (type-ahead, no mobile numbers) | `haribhagat.write` / login |
-| `events.js` | `createEventAction`, `updateEventAction`, `toggleEventAction` | `event.manage` |
+| `events.js` | `createEventAction` (`event.create`), `updateEventAction`, `toggleEventAction` (`event.manage`) | see permission matrix |
 | `disks.js` | `createDiskAction` (`disk.create`: ADMIN+STAFF); `updateDiskAction`, `toggleDiskAction`, `unbindDiskAction` (`disk.manage`: ADMIN) | see left |
 | `visits.js` | `createVisitAction`, `updateVisitAction`, `attachPhotosAction`, `detachPhotosAction` | `visit.write` |
 | `photos.js` | `updatePhotoNotesAction`, `linkPhotoToVisitAction`, `unlinkPhotoAction` | `photo.write` |
 | `users.js` | `createUserAction`, `updateUserAction`, `resetPasswordAction` | `user.manage` |
 | `tokens.js` | `createTokenAction` (returns raw token once), `revokeTokenAction` | `token.manage` |
 
-Permission matrix: `src/lib/permissions.js` (`haribhagat.write`, `visit.write`, `photo.write`, `disk.create` → ADMIN+STAFF; `event.manage`, `disk.manage`, `user.manage`, `token.manage`, `audit.view` → ADMIN).
+Permission matrix: `src/lib/permissions.js` (`haribhagat.write`, `visit.write`, `photo.write`, `disk.create`, `event.create` → ADMIN+STAFF; `event.manage`, `disk.manage`, `user.manage`, `token.manage`, `audit.view` → ADMIN).

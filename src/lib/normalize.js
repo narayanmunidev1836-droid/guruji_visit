@@ -17,6 +17,15 @@ export function normalizeText(value) {
   return text === "" ? null : text;
 }
 
+/**
+ * Like normalizeText, but upper-cased: every text the users type is stored and shown in CAPITALS.
+ * Gujarati has no case, so only Latin letters change.
+ */
+export function upperText(value) {
+  const text = normalizeText(value);
+  return text === null ? null : text.toLocaleUpperCase("en-US");
+}
+
 /** Case-insensitive comparison key. Gujarati has no case, so this only affects Latin text. */
 export function searchKey(value) {
   const text = normalizeText(value);

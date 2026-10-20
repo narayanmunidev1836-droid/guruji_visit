@@ -91,13 +91,13 @@ describe.skipIf(!HAS_DB)("Haribhagat directory", () => {
     await svc.createHaribhagat(staff, { name: "Hitesh", surname: "Desai", gam: "Navsari", jillo: "Navsari" });
 
     const find = async (q) => (await svc.searchHaribhagats(staff, { q })).items.map((p) => p.name).sort();
-    expect(await find("ramesh")).toEqual(["Ramesh"]);
-    expect(await find("KANJI")).toEqual(["Ramesh"]);
-    expect(await find("pat")).toEqual(["Ramesh"]);
-    expect(await find("vadod")).toEqual(["Ramesh"]);
-    expect(await find("390001")).toEqual(["Ramesh"]);
-    expect(await find("98765")).toEqual(["Ramesh"]);
-    expect(await find("ramesh vadodara")).toEqual(["Ramesh"]);
+    expect(await find("ramesh")).toEqual(["RAMESH"]);
+    expect(await find("KANJI")).toEqual(["RAMESH"]);
+    expect(await find("pat")).toEqual(["RAMESH"]);
+    expect(await find("vadod")).toEqual(["RAMESH"]);
+    expect(await find("390001")).toEqual(["RAMESH"]);
+    expect(await find("98765")).toEqual(["RAMESH"]);
+    expect(await find("ramesh vadodara")).toEqual(["RAMESH"]);
     expect(await find("ramesh navsari")).toEqual([]);
     expect(await find("રમેશ")).toEqual(["રમેશ"]);
     expect(await find("આણંદ")).toEqual(["રમેશ"]);
@@ -124,7 +124,7 @@ describe.skipIf(!HAS_DB)("Haribhagat directory", () => {
     const result = await svc.updateHaribhagat(staff, created.id, person({ gam: "Surat", mobileNo: "" }), { canEditMobile: false });
     expect(result.ok).toBe(true);
     const row = await db.haribhagat.findUnique({ where: { id: created.id } });
-    expect(row.gam).toBe("Surat");
+    expect(row.gam).toBe("SURAT");
     expect(row.mobileNo).toBe("9876543210");
   });
 
@@ -134,5 +134,13 @@ describe.skipIf(!HAS_DB)("Haribhagat directory", () => {
     expect(rows).toHaveLength(1);
     expect(JSON.stringify(rows)).not.toContain("9876543210");
     expect(await svc.pickerSearch("   ")).toEqual([]);
+  });
+
+  it("the visit picker finds people by mobile only for roles that may see mobile numbers", async () => {
+    await svc.createHaribhagat(staff, person({ mobileNo: "9876543210" }));
+    expect(await svc.pickerSearch("98765")).toHaveLength(0);
+    const rows = await svc.pickerSearch("98765", { allowMobile: true });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].mobileNo).toBe("9876543210");
   });
 });

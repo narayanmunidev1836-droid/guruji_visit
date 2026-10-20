@@ -39,7 +39,7 @@ describe.skipIf(!HAS_DB)("visits (Haribhagat + hard disk + folder)", () => {
     expect(result.ok).toBe(true);
     const visit = await svc.getVisit(result.visit.id);
     expect(visit.hardDisk.labelName).toBe("HDD-001");
-    expect(visit.folderPath).toBe("MUKT SWAMI DATA/decstop");
+    expect(visit.folderPath).toBe("MUKT SWAMI DATA/DECSTOP");
     expect(visit.eventId).toBe(event.id);
     expect(visit.visitDate.toISOString().slice(0, 10)).toBe("2019-03-14");
     expect(visit.haribhagats.map((l) => [l.haribhagatId, l.isPrimary])).toEqual([[ramesh.id, true]]);
@@ -48,7 +48,7 @@ describe.skipIf(!HAS_DB)("visits (Haribhagat + hard disk + folder)", () => {
 
   it("accepts a pasted Windows path: the drive letter is dropped and separators are unified", async () => {
     const result = await svc.createVisit(staff, base({ folderPath: String.raw`F:\MUKT SWAMI DATA\decstop` }));
-    expect((await svc.getVisit(result.visit.id)).folderPath).toBe("MUKT SWAMI DATA/decstop");
+    expect((await svc.getVisit(result.visit.id)).folderPath).toBe("MUKT SWAMI DATA/DECSTOP");
   });
 
   it("requires a folder and rejects '..'", async () => {
@@ -90,7 +90,7 @@ describe.skipIf(!HAS_DB)("visits (Haribhagat + hard disk + folder)", () => {
     expect(result.ok).toBe(true);
     const visit = await svc.getVisit(result.visit.id);
     expect(visit.visitDate.toISOString().slice(0, 10)).toBe("2019-03-14");
-    expect(visit.event.name).toBe("Pathramani");
+    expect(visit.event.name).toBe("PATHRAMANI");
     expect(visit.placeType).toBe("HOME");
     expect(visit.haribhagats.map((l) => [l.haribhagatId, l.isPrimary])).toEqual(expect.arrayContaining([[suresh.id, true], [ramesh.id, false]]));
   });

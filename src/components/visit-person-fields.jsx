@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { AlertTriangle, Loader2, Search, UserCheck, X } from "lucide-react";
+import { AlertTriangle, Loader2, Search, UserCheck, UserPlus, X } from "lucide-react";
 import { haribhagatDetailsAction, pickerSearchAction } from "@/actions/haribhagats";
 import { Field, SubmitButton, useFormState } from "@/components/ui/form";
+import { DebounceInput } from "@/components/ui/debounce-input";
 import { Input, Label } from "@/components/ui/inputs";
 
 const FIELDS = ["surname", "name", "fatherName", "mobileNo", "gam", "taluko", "jillo", "pincode"];
@@ -11,6 +12,15 @@ const EMPTY = Object.fromEntries(FIELDS.map((key) => [key, ""]));
 
 function toValues(person) {
   return Object.fromEntries(FIELDS.map((key) => [key, person?.[key] ?? ""]));
+}
+
+/** What was typed in the search box, split into name / father name / surname ("Ramesh Kanji Patel"). Staff can correct it. */
+function guessNewPerson(text) {
+  const words = text.trim().split(/s+/).filter(Boolean);
+  if (words.length === 0) return {};
+  if (words.length === 1) return { name: words[0] };
+  if (words.length === 2) return { name: words[0], surname: words[1] };
+  return { name: words[0], fatherName: words.slice(1, -1).join(" "), surname: words[words.length - 1] };
 }
 
 function DuplicateWarning({ onUse }) {
@@ -52,28 +62,45 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels }
   const [person, setPerson] = useState(initialPerson);
   const [values, setValues] = useState(toValues(initialPerson));
   const [query, setQuery] = useState("");
+  const [searchKey, setSearchKey] = useState(0); // changing it clears the search box
   const [results, setResults] = useState([]);
   const [searched, setSearched] = useState(false);
   const [searching, startSearch] = useTransition();
   const [loading, startLoad] = useTransition();
   const requestId = useRef(0);
+  const root = useRef(null);
   const locked = Boolean(person);
 
   useEffect(() => {
     const text = query.trim();
     if (text.length < 2) return undefined;
     const current = ++requestId.current;
-    const timer = setTimeout(() => {
-      startSearch(async () => {
-        const rows = await pickerSearchAction(text);
-        if (current === requestId.current) {
-          setResults(rows);
-          setSearched(true);
-        }
-      });
-    }, 250);
-    return () => clearTimeout(timer);
+    startSearch(async () => {
+      const rows = await pickerSearchAction(text);
+      if (current === requestId.current) {
+        setResults(rows);
+        setSearched(true);
+      }
+    });
+    return undefined;
   }, [query]);
+
+  /** Called by the search box once the user pauses typing. */
+  function onQuery(value) {
+    setQuery(value);
+    if (value.trim().length < 2) {
+      requestId.current += 1; // ignore any search still in flight
+      setResults([]);
+      setSearched(false);
+    }
+  }
+
+  function clearSearch() {
+    setQuery("");
+    setResults([]);
+    setSearched(false);
+    setSearchKey((key) => key + 1);
+  }
 
   function select(id) {
     startLoad(async () => {
@@ -81,15 +108,22 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels }
       if (!details) return;
       setPerson(details);
       setValues(toValues(details));
-      setQuery("");
-      setResults([]);
-      setSearched(false);
+      clearSearch();
     });
   }
 
   function clear() {
     setPerson(null);
     setValues(EMPTY);
+  }
+
+  /** "Create" from the search box: start a new Haribhagat, prefilled from what was typed. */
+  function createNew() {
+    const guess = guessNewPerson(query);
+    setPerson(null);
+    setValues({ ...EMPTY, ...guess });
+    clearSearch();
+    setTimeout(() => root.current?.querySelector(`input[name="${guess.surname ? "fatherName" : "surname"}"]`)?.focus(), 0);
   }
 
   const bind = (key) => ({
@@ -101,21 +135,21 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels }
   });
 
   return (
-    <div className="space-y-3">
+    <div ref={root} className="space-y-3">
       {person && <input type="hidden" name="haribhagatIds" value={person.id} />}
 
       <div>
         <Label>{labels.haribhagats}</Label>
         <div className="relative">
           <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-          <Input
+          <DebounceInput
+            key={searchKey}
             type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onDebouncedChange={onQuery}
             onKeyDown={(event) => {
               if (event.key === "Enter") event.preventDefault(); // Enter must not submit the visit form
             }}
-            placeholder="Search an existing Haribhagat by name, surname or village…"
+            placeholder="Search an existing Haribhagat by name, surname, village or mobile…"
             className="pl-10"
             aria-label="Search Haribhagat"
             autoComplete="off"
@@ -126,17 +160,23 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels }
         {query.trim().length >= 2 && searched && (
           <ul className="mt-2 divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
             {results.length === 0 ? (
-              <li className="px-3 py-2.5 text-sm text-muted">No Haribhagat found. Fill the details below to add a new one with this visit.</li>
+              <li className="px-3 py-2.5 text-sm text-muted">No Haribhagat found for “{query.trim()}”.</li>
             ) : (
               results.map((p) => (
                 <li key={p.id}>
                   <button type="button" onClick={() => select(p.id)} className="flex w-full flex-wrap items-center justify-between gap-2 px-3 py-2.5 text-left text-sm hover:bg-primary-soft">
                     <span className="font-medium">{[p.name, p.fatherName, p.surname].filter(Boolean).join(" ")}</span>
-                    <span className="text-xs text-muted">{[p.gam, p.jillo].filter(Boolean).join(", ")}</span>
+                    <span className="text-xs text-muted">{[p.gam, p.jillo, p.mobileNo].filter(Boolean).join(", ")}</span>
                   </button>
                 </li>
               ))
             )}
+            <li>
+              <button type="button" onClick={createNew} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-medium text-primary hover:bg-primary-soft">
+                <UserPlus className="h-4 w-4 shrink-0" aria-hidden />
+                Create new Haribhagat “{query.trim()}”
+              </button>
+            </li>
           </ul>
         )}
       </div>
@@ -151,7 +191,7 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels }
           </button>
         </div>
       ) : (
-        <p className="text-xs text-muted">Not in the list? Fill in the details below - a new Haribhagat is saved together with this visit.</p>
+        <p className="text-xs text-muted">Not in the list? Choose “Create new Haribhagat” above, or just fill in the details below - a new Haribhagat is saved together with this entry.</p>
       )}
 
       <div className="grid gap-x-3 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">

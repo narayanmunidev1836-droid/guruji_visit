@@ -1,16 +1,16 @@
 import { z } from "zod";
-import { normalizeText, normalizeMobile, normalizePincode } from "@/lib/normalize";
+import { upperText, normalizeMobile, normalizePincode } from "@/lib/normalize";
 
-// Reusable zod field builders. All text is trimmed/whitespace-collapsed/NFC-normalized before validation.
+// Reusable zod field builders. All text is trimmed/whitespace-collapsed/NFC-normalized and UPPER-CASED before validation.
 
 export const requiredText = (label, max = 200) =>
   z.preprocess(
-    (v) => normalizeText(v) ?? "",
+    (v) => upperText(v) ?? "",
     z.string().min(1, `${label} is required.`).max(max, `${label} must be at most ${max} characters.`),
   );
 
 export const optionalText = (max = 200) =>
-  z.preprocess((v) => normalizeText(v), z.string().max(max, `Must be at most ${max} characters.`).nullable());
+  z.preprocess((v) => upperText(v), z.string().max(max, `Must be at most ${max} characters.`).nullable());
 
 // A missing form field and an empty one are treated the same (zod 4 would otherwise reject a missing key).
 const asText = (v) => (v === undefined || v === null ? "" : String(v));

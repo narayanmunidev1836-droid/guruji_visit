@@ -21,18 +21,18 @@ describe.skipIf(!HAS_DB)("events master data", () => {
   it("the dropdown only contains active events and follows add / deactivate / activate", async () => {
     await events.createEvent(admin, { name: "Pathramani" });
     const vichran = (await events.createEvent(admin, { name: "Vichran" })).event;
-    expect(await activeNames()).toEqual(["Pathramani", "Vichran"]);
+    expect(await activeNames()).toEqual(["PATHRAMANI", "VICHRAN"]);
     // forms use `isActive` to label inactive options, so every dropdown row must carry it (regression)
     expect((await events.listActiveEvents()).every((e) => e.isActive === true)).toBe(true);
 
     await events.setEventActive(admin, vichran.id, false);
-    expect(await activeNames()).toEqual(["Pathramani"]);
+    expect(await activeNames()).toEqual(["PATHRAMANI"]);
 
     await events.createEvent(admin, { name: "Sabha" });
-    expect(await activeNames()).toEqual(["Pathramani", "Sabha"]);
+    expect(await activeNames()).toEqual(["PATHRAMANI", "SABHA"]);
 
     await events.setEventActive(admin, vichran.id, true);
-    expect(await activeNames()).toEqual(["Pathramani", "Sabha", "Vichran"]);
+    expect(await activeNames()).toEqual(["PATHRAMANI", "SABHA", "VICHRAN"]);
   });
 
   it("rejects duplicate names regardless of case and spacing", async () => {

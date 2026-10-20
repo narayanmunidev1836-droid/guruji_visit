@@ -1,8 +1,9 @@
 import { Search } from "lucide-react";
 import { t } from "@/lib/labels";
 import { placeTypeOptions } from "@/lib/ui-labels";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
+import { DebounceInput } from "@/components/ui/debounce-input";
 import { GetForm } from "@/components/ui/get-form";
 import { Input, Label, Select } from "@/components/ui/inputs";
 
@@ -16,7 +17,7 @@ function F({ label, children, className }) {
 }
 
 /**
- * Visit search form (GET form that navigates client-side without a page reload, keeps the URL shareable and works without JavaScript).
+ * Visit search form (GET form that navigates client-side without a page reload, searches while typing, keeps the URL shareable and works without JavaScript).
  * Event and hard disk options are passed in from database rows - nothing is hardcoded here.
  */
 export function SearchForm({ values, events, disks, allowMobile }) {
@@ -27,25 +28,25 @@ export function SearchForm({ values, events, disks, allowMobile }) {
   );
 
   return (
-    // key: remount when the URL filters change, so "Reset" (and back/forward) refill the inputs.
-    <GetForm key={JSON.stringify(values)} action="/search" role="search" className="rounded-2xl border border-border bg-surface p-4 shadow-card">
+    <GetForm action="/search" role="search" className="rounded-2xl border border-border bg-surface p-4 shadow-card">
       {values.haribhagatId && <input type="hidden" name="haribhagatId" value={values.haribhagatId} />}
       <div className="flex flex-col gap-2 sm:flex-row">
         <div className="relative flex-1">
           <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-          <Input
+          <DebounceInput
             name="q"
             type="search"
+            submitOnChange
             defaultValue={values.q ?? ""}
-            placeholder="Search a Haribhagat: name, surname, village, mobile, disk, folder…"
+            placeholder="Search a Haribhagat: name, surname, village, mobile, disk, path…"
             className="pl-10"
             aria-label={t("search")}
           />
         </div>
         <Button type="submit">{t("searchAction")}</Button>
-        <ButtonLink href="/search" variant="secondary">
+        <Button type="reset" variant="secondary">
           {t("reset")}
-        </ButtonLink>
+        </Button>
       </div>
 
       <details className="mt-4 group" open={advanced}>
@@ -92,7 +93,7 @@ export function SearchForm({ values, events, disks, allowMobile }) {
           <F label={t("placeType")}>
             <Select name="placeType" defaultValue={values.placeType ?? ""} options={placeTypeOptions()} placeholder={t("all")} />
           </F>
-          <F label="Folder (on disk)" className="sm:col-span-2">
+          <F label="Path (on disk)" className="sm:col-span-2">
             <Input name="folder" defaultValue={values.folder ?? ""} placeholder="e.g. 2019/March" />
           </F>
         </div>

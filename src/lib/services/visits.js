@@ -50,13 +50,13 @@ const visitWithNewPersonSchema = z.object({ haribhagatIds: z.any().optional(), .
 /**
  * Folder typed by staff, relative to the disk root. A pasted Windows path such as "F:\MUKT SWAMI DATA\decstop" is accepted:
  * the drive letter only says where the disk happened to be mounted, so it is dropped and "\" becomes "/".
- * Returns { ok, folder } or an error result. The folder is required: an empty one (or just a drive letter) is rejected.
+ * Returns { ok, folder } or an error result. The path is required: an empty one (or just a drive letter) is rejected.
  */
 export function parseVisitFolder(input) {
   const text = String(input ?? "").trim().replace(/^([A-Za-z]:)?[\\/]*/, "");
   try {
-    const folder = normalizeFolderPath(text);
-    if (folder === "") return fail("Folder is required.", { folderPath: "Folder is required." });
+    const folder = normalizeFolderPath(text).toLocaleUpperCase("en-US"); // stored in CAPITALS like all other text
+    if (folder === "") return fail("Path is required.", { folderPath: "Path is required." });
     return { ok: true, folder };
   } catch (error) {
     if (error instanceof InvalidPathError) return fail(error.message, { folderPath: error.message });

@@ -24,11 +24,12 @@ export function mobileForUser(mobileNo, user, mobileVisibleRoles) {
   return canViewMobile(user, mobileVisibleRoles) ? mobileNo : maskMobile(mobileNo);
 }
 
-/** Staff may manage people, visits and photo metadata and register new hard disks. Only admins edit/deactivate master data and manage users and tokens. */
+/** Staff may manage people, visits and photo metadata and register new hard disks and add new events. Only admins edit/deactivate master data and manage users and tokens. */
 export const PERMISSIONS = {
   "haribhagat.write": [ROLES.ADMIN, ROLES.STAFF],
   "visit.write": [ROLES.ADMIN, ROLES.STAFF],
   "photo.write": [ROLES.ADMIN, ROLES.STAFF],
+  "event.create": [ROLES.ADMIN, ROLES.STAFF],
   "event.manage": [ROLES.ADMIN],
   "disk.create": [ROLES.ADMIN, ROLES.STAFF],
   "disk.manage": [ROLES.ADMIN],

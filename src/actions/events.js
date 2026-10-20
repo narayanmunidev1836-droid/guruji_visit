@@ -9,7 +9,7 @@ import { createEvent, setEventActive, updateEvent } from "@/lib/services/events"
 
 export async function createEventAction(_prev, formData) {
   return runAction(async () => {
-    const user = await requirePermission("event.manage");
+    const user = await requirePermission("event.create");
     const result = await createEvent(user, formDataToObject(formData));
     if (!result.ok) return result;
     revalidatePath("/events");

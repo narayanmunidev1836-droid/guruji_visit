@@ -44,7 +44,7 @@ export function parseSearchParams(raw) {
     hardDiskId: positiveInt(text("hardDiskId")),
     haribhagatId: positiveInt(text("haribhagatId")),
     placeType: PLACE_TYPES.includes(placeType) ? placeType : null,
-    folder: text("folder"),
+    folder: text("folder")?.toLocaleUpperCase("en-US") ?? null, // folders are stored in CAPITALS
     page,
   };
 }

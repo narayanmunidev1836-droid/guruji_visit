@@ -9,6 +9,7 @@ import {
   normalizeText,
   searchKey,
   toAsciiDigits,
+  upperText,
 } from "@/lib/normalize";
 
 describe("normalizeText", () => {
@@ -118,5 +119,13 @@ describe("digit helpers", () => {
   it("extracts digits only", () => {
     expect(digitsOnly("+91 (98765) 43-210")).toBe("919876543210");
     expect(digitsOnly(null)).toBe("");
+  });
+});
+
+describe("upperText", () => {
+  it("upper-cases Latin text, trims and collapses spaces, leaves Gujarati alone", () => {
+    expect(upperText("  ramesh   kanji ")).toBe("RAMESH KANJI");
+    expect(upperText("રમેશ patel")).toBe("રમેશ PATEL");
+    expect(upperText("   ")).toBeNull();
   });
 });

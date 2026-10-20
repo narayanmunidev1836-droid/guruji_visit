@@ -57,7 +57,7 @@ describe.skipIf(!HAS_DB)("visit search", () => {
         visitDate: day("2019-03-14"),
         placeType: "HOME",
         hardDiskId: d1.id,
-        folderPath: "2019/March/Patel Home",
+        folderPath: "2019/MARCH/PATEL HOME",
         haribhagats: { create: [{ haribhagatId: ramesh.id, isPrimary: true }] },
       },
     });
@@ -66,7 +66,7 @@ describe.skipIf(!HAS_DB)("visit search", () => {
         visitDate: day("2019-07-02"),
         placeType: "TEMPLE",
         hardDiskId: d2.id,
-        folderPath: "Vichran/July",
+        folderPath: "VICHRAN/JULY",
         haribhagats: { create: [{ haribhagatId: suresh.id, isPrimary: true }, { haribhagatId: ramesh.id }] },
       },
     });
@@ -80,7 +80,7 @@ describe.skipIf(!HAS_DB)("visit search", () => {
     const result = await run({ surname: "patel" });
     expect(result.total).toBe(2); // Ramesh is in two visits
     expect(result.items.map((v) => v.hardDisk.labelName).sort()).toEqual(["HDD-001", "HDD-002"]);
-    expect(folders(await run({ name: "suresh" }))).toEqual(["Vichran/July", ""]); // dated first, undated last
+    expect(folders(await run({ name: "suresh" }))).toEqual(["VICHRAN/JULY", ""]); // dated first, undated last
   });
 
   it("with no filter lists the latest created entries first, 10 per page", async () => {
@@ -108,7 +108,7 @@ describe.skipIf(!HAS_DB)("visit search", () => {
   it("quick search matches the person, the disk label and the folder", async () => {
     expect((await run({ q: "patel" })).total).toBe(2);
     expect((await run({ q: "hdd-002" })).total).toBe(1);
-    expect(folders(await run({ q: "march home" }))).toEqual(["2019/March/Patel Home"]);
+    expect(folders(await run({ q: "march home" }))).toEqual(["2019/MARCH/PATEL HOME"]);
     expect((await run({ q: "ramesh vadodara" })).total).toBe(2);
     expect((await run({ q: "ramesh surat" })).total).toBe(0);
   });

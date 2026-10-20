@@ -13,6 +13,7 @@ export const metadata = { title: "Events" };
 
 export default async function EventsPage() {
   const user = await requireUser();
+  const canCreate = can(user, "event.create");
   const canManage = can(user, "event.manage");
   const events = await listEvents();
   const labels = { name: t("eventName"), description: t("description"), add: t("add"), save: t("save") };
@@ -24,7 +25,7 @@ export default async function EventsPage() {
         description="Event names used in the Event Name dropdown. Deactivated events disappear from new entries but stay visible on old records."
       />
 
-      {canManage && (
+      {canCreate && (
         <Card className="mb-6">
           <CardHeader title="Add an event" />
           <CardBody>
@@ -34,7 +35,7 @@ export default async function EventsPage() {
       )}
 
       {events.length === 0 ? (
-        <EmptyState title="No events yet" description="An administrator needs to add event names (for example Pathramani, Vichran)." />
+        <EmptyState title="No events yet" description="Add event names (for example Pathramani, Vichran) above." />
       ) : (
         <Card>
           <Table>

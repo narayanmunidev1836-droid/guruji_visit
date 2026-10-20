@@ -12,10 +12,10 @@ describe("roles", () => {
   });
 
   it("staff can manage people, visits and photo metadata", () => {
-    for (const p of ["haribhagat.write", "visit.write", "photo.write", "disk.create"]) expect(can(staff, p)).toBe(true);
+    for (const p of ["haribhagat.write", "visit.write", "photo.write", "disk.create", "event.create"]) expect(can(staff, p)).toBe(true);
   });
 
-  it("only admins manage events, edit/deactivate disks, manage users and see the audit log", () => {
+  it("only admins edit/deactivate events and disks, manage users and see the audit log", () => {
     for (const p of ["event.manage", "disk.manage", "user.manage", "audit.view"]) {
       expect(can(admin, p)).toBe(true);
       expect(can(staff, p)).toBe(false);

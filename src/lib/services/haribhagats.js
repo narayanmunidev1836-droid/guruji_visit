@@ -151,17 +151,20 @@ export async function getHaribhagatVisits(id) {
   return rows.map((r) => r.visit);
 }
 
-/** Compact lookup used by the "choose Haribhagats" picker on the visit form. Mobile numbers are never returned. */
-export async function pickerSearch(query, limit = 10) {
-  const where = buildPersonWhere({ q: query }, { allowMobile: false });
+/**
+ * Compact lookup used by the Haribhagat search on the entry form. Only a role that may see mobile numbers (`allowMobile`)
+ * can search by mobile, and only then is the number returned with the result.
+ */
+export async function pickerSearch(query, { limit = 10, allowMobile = false } = {}) {
+  const where = buildPersonWhere({ q: query }, { allowMobile });
   if (!where) return [];
   const rows = await db.haribhagat.findMany({
     where,
     orderBy: [{ surname: "asc" }, { name: "asc" }],
     take: limit,
-    select: { id: true, name: true, fatherName: true, surname: true, gam: true, jillo: true },
+    select: { id: true, name: true, fatherName: true, surname: true, gam: true, jillo: true, mobileNo: true },
   });
-  return rows;
+  return rows.map((row) => ({ ...row, mobileNo: allowMobile ? row.mobileNo : undefined }));
 }
 
 export async function getHaribhagatsByIds(ids) {

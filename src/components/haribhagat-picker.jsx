@@ -4,11 +4,12 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { Plus, Search, Star, X } from "lucide-react";
 import clsx from "clsx";
 import { pickerSearchAction } from "@/actions/haribhagats";
-import { Input, Label } from "@/components/ui/inputs";
+import { DebounceInput } from "@/components/ui/debounce-input";
+import { Label } from "@/components/ui/inputs";
 
 function describe(p) {
   const name = [p.name, p.fatherName, p.surname].filter(Boolean).join(" ");
-  const place = [p.gam, p.jillo].filter(Boolean).join(", ");
+  const place = [p.gam, p.jillo, p.mobileNo].filter(Boolean).join(", ");
   return { name, place };
 }
 
@@ -20,6 +21,7 @@ export function HaribhagatPicker({ initial = [], initialPrimaryId = null, label,
   const [selected, setSelected] = useState(initial);
   const [primaryId, setPrimaryId] = useState(initialPrimaryId ?? initial[0]?.id ?? null);
   const [query, setQuery] = useState("");
+  const [searchKey, setSearchKey] = useState(0); // changing it clears the search box
   const [results, setResults] = useState([]);
   const [searched, setSearched] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -29,16 +31,14 @@ export function HaribhagatPicker({ initial = [], initialPrimaryId = null, label,
     const text = query.trim();
     if (text.length < 2) return undefined;
     const current = ++requestId.current;
-    const timer = setTimeout(() => {
-      startTransition(async () => {
-        const rows = await pickerSearchAction(text);
-        if (current === requestId.current) {
-          setResults(rows);
-          setSearched(true);
-        }
-      });
-    }, 250);
-    return () => clearTimeout(timer);
+    startTransition(async () => {
+      const rows = await pickerSearchAction(text);
+      if (current === requestId.current) {
+        setResults(rows);
+        setSearched(true);
+      }
+    });
+    return undefined;
   }, [query]);
 
   const selectedIds = new Set(selected.map((p) => p.id));
@@ -50,6 +50,7 @@ export function HaribhagatPicker({ initial = [], initialPrimaryId = null, label,
     setQuery("");
     setResults([]);
     setSearched(false);
+    setSearchKey((key) => key + 1);
   }
 
   function remove(id) {
@@ -98,11 +99,10 @@ export function HaribhagatPicker({ initial = [], initialPrimaryId = null, label,
 
       <div className="relative">
         <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-        <Input
+        <DebounceInput
+          key={searchKey}
           type="search"
-          value={query}
-          onChange={(e) => {
-            const value = e.target.value;
+          onDebouncedChange={(value) => {
             setQuery(value);
             if (value.trim().length < 2) {
               requestId.current += 1; // ignore any search still in flight

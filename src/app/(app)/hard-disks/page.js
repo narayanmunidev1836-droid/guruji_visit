@@ -24,7 +24,7 @@ export default async function HardDisksPage() {
     <>
       <PageHeader
         title={t("hardDisks")}
-        description="Every hard disk is registered with the unique label on its sticker. When you add a visit you choose the disk here and type the folder."
+        description="Every hard disk is registered with the unique label on its sticker. When you add a visit you choose the disk here and type the path."
       />
 
       {canCreate && (

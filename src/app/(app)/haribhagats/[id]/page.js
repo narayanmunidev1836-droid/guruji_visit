@@ -78,7 +78,7 @@ export default async function HaribhagatPage({ params }) {
         <section>
           <h2 className="mb-3 text-base font-semibold">{t("visits")} ({visits.length})</h2>
           {visits.length === 0 ? (
-            <EmptyState title="No visits recorded" description="Add a visit to record which hard disk and folder hold this Haribhagat's photos." />
+            <EmptyState title="No visits recorded" description="Add a visit to record which hard disk and path hold this Haribhagat's photos." />
           ) : (
             <div className="space-y-4">
               {visits.map((visit) => (

@@ -8,7 +8,7 @@ Who does what: **Admin** = manages master data, users, tokens. **Staff** = searc
 3. Staff: *Needs review* → link folders to visits.
 
 ## Add or change an event name (Workflow B)
-Admin: *Events → Add an event*. To retire a name click *Deactivate*: it disappears from new-entry dropdowns but old visits keep it. Re-activate any time. Names are never deleted.
+Admin or staff: *Events → Add an event*. Admin only: edit / *Deactivate* a name: it disappears from new-entry dropdowns but old visits keep it. Re-activate any time. Names are never deleted.
 
 ## Index a disk again / new photos added later
 Run `node cli.mjs scan --root <disk>` again. Only new/changed files are processed; existing records, visit links and notes are preserved. Files that vanished are flagged **MISSING** (not deleted).

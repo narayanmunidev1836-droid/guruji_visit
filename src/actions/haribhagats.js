@@ -9,13 +9,13 @@ import { canViewMobile } from "@/lib/permissions";
 import { formDataToObject } from "@/lib/validation";
 import { createHaribhagat, getHaribhagat, pickerSearch, updateHaribhagat } from "@/lib/services/haribhagats";
 
-/** Type-ahead for the Haribhagat picker on the visit form. Returns [] for anonymous callers. Never returns mobile numbers. */
+/** Type-ahead for the Haribhagat search on the entry form. Returns [] for anonymous callers. Mobile numbers are searchable / returned only for roles that may see them. */
 export async function pickerSearchAction(query) {
   const user = await getCurrentUser();
   if (!user || typeof query !== "string") return [];
   const text = query.trim().slice(0, 100);
   if (text.length < 2) return [];
-  return pickerSearch(text);
+  return pickerSearch(text, { allowMobile: canViewMobile(user, getEnv().mobileVisibleRoles) });
 }
 
 /** Full details of one Haribhagat to fill the visit form after the user picked a search result. Mobile is masked for roles without access. */

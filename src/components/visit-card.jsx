@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { CopyButton } from "@/components/copy-button";
 import { DeleteVisitButton } from "@/components/delete-visit-button";
 
-/** Hard disk and folder shown separately ("HDD-001" and "MUKT SWAMI DATA/decstop"); the copy button copies only the folder. */
+/** Hard disk and folder shown separately ("HDD-001" and "MUKT SWAMI DATA/decstop"); the copy button copies only the path. */
 export function VisitLocation({ visit, copy = true }) {
   if (!visit.hardDisk) return <span className="text-sm text-muted">No hard disk recorded</span>;
   const disk = visit.hardDisk.labelName;
@@ -18,7 +18,7 @@ export function VisitLocation({ visit, copy = true }) {
         <span className="break-all">{disk}</span>
       </span>
       {visit.folderPath ? (
-        <span className="inline-flex items-center gap-1.5 rounded-lg bg-surface-muted px-2.5 py-1 text-sm font-medium text-foreground ring-1 ring-border" title="Folder">
+        <span className="inline-flex items-center gap-1.5 rounded-lg bg-surface-muted px-2.5 py-1 text-sm font-medium text-foreground ring-1 ring-border" title="Path">
           <FolderOpen className="h-4 w-4 shrink-0 text-muted" aria-hidden />
           <span className="break-all">{visit.folderPath}</span>
         </span>
