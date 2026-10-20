@@ -83,6 +83,15 @@ describe.skipIf(!HAS_DB)("visit search", () => {
     expect(folders(await run({ name: "suresh" }))).toEqual(["Vichran/July", ""]); // dated first, undated last
   });
 
+  it("with no filter lists the latest created entries first, 10 per page", async () => {
+    const result = await run({});
+    expect(result.latest).toBe(true);
+    expect(result.pageSize).toBe(10);
+    expect(result.total).toBe(3);
+    expect(folders(result)[0]).toBe(""); // created last in beforeEach, although it has no date
+    expect((await run({ surname: "patel" })).latest).toBe(false);
+  });
+
   it("finds visits by village, taluko, district, pincode and father name", async () => {
     expect((await run({ gam: "surat" })).total).toBe(2);
     expect((await run({ taluko: "vadodara" })).total).toBe(2);

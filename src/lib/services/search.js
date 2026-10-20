@@ -8,6 +8,7 @@ import { buildPersonWhere, personTokenConditions, queryTokens } from "@/lib/serv
 import { VISIT_CARD_INCLUDE } from "@/lib/services/visits";
 
 export const SEARCH_PAGE_SIZE = 20;
+export const LATEST_PAGE_SIZE = 10;
 const MAX_PAGE = 5000;
 
 const PLACE_TYPES = ["HOME", "OFFICE", "TEMPLE", "OTHER"];
@@ -115,27 +116,28 @@ export function buildVisitWhere(filters, { allowMobile }) {
   return and.length > 0 ? { AND: and } : {};
 }
 
-/** True when at least one filter is set (the search page lists nothing until then). */
+/** True when at least one filter is set (otherwise the search page shows the latest entries). */
 export function hasSearchFilters(filters) {
   const { page, ...rest } = filters;
   void page;
   return Object.entries(rest).some(([key, value]) => !key.endsWith("Text") && value !== null && value !== undefined && value !== "");
 }
 
-/** Main visit search: newest first, always paginated. Each visit carries its people, hard disk and folder. */
+/**
+ * Main visit search, always paginated. Each visit carries its people, hard disk and folder.
+ * With no filter set it returns the LATEST entries (newest created first, 10 per page, `latest: true`);
+ * with filters it returns the matches, newest visit date first.
+ */
 export async function searchVisits(user, filters) {
   const allowMobile = canViewMobile(user, getEnv().mobileVisibleRoles);
-  const where = buildVisitWhere(filters, { allowMobile });
+  const latest = !hasSearchFilters(filters);
+  const where = latest ? {} : buildVisitWhere(filters, { allowMobile });
+  const pageSize = latest ? LATEST_PAGE_SIZE : SEARCH_PAGE_SIZE;
+  const orderBy = latest ? [{ createdAt: "desc" }, { id: "desc" }] : [{ visitDate: { sort: "desc", nulls: "last" } }, { id: "desc" }];
   const page = filters.page ?? 1;
   const [items, total] = await Promise.all([
-    db.visit.findMany({
-      where,
-      orderBy: [{ visitDate: { sort: "desc", nulls: "last" } }, { id: "desc" }],
-      skip: (page - 1) * SEARCH_PAGE_SIZE,
-      take: SEARCH_PAGE_SIZE,
-      include: VISIT_CARD_INCLUDE,
-    }),
+    db.visit.findMany({ where, orderBy, skip: (page - 1) * pageSize, take: pageSize, include: VISIT_CARD_INCLUDE }),
     db.visit.count({ where }),
   ]);
-  return { items, total, page, pageSize: SEARCH_PAGE_SIZE, totalPages: Math.max(1, Math.ceil(total / SEARCH_PAGE_SIZE)) };
+  return { items, total, page, pageSize, latest, totalPages: Math.max(1, Math.ceil(total / pageSize)) };
 }

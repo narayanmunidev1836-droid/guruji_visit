@@ -2,7 +2,7 @@ import { requireUser } from "@/lib/auth/dal";
 import { getEnv } from "@/lib/env";
 import { can, canViewMobile } from "@/lib/permissions";
 import { t } from "@/lib/labels";
-import { filtersToParams, hasSearchFilters, parseSearchParams, searchVisits } from "@/lib/services/search";
+import { filtersToParams, parseSearchParams, searchVisits } from "@/lib/services/search";
 import { listEvents } from "@/lib/services/events";
 import { listDisks } from "@/lib/services/disks";
 import { Alert } from "@/components/ui/alert";
@@ -18,9 +18,8 @@ export default async function SearchPage({ searchParams }) {
   const raw = await searchParams;
   const filters = parseSearchParams(raw);
   const params = filtersToParams(filters);
-  const searched = hasSearchFilters(filters);
 
-  const [events, disks, result] = await Promise.all([listEvents(), listDisks(), searched ? searchVisits(user, filters) : null]);
+  const [events, disks, result] = await Promise.all([listEvents(), listDisks(), searchVisits(user, filters)]);
   const allowMobile = canViewMobile(user, getEnv().mobileVisibleRoles);
 
   return (
@@ -39,13 +38,19 @@ export default async function SearchPage({ searchParams }) {
       <SearchForm values={params} events={events} disks={disks} allowMobile={allowMobile} />
 
       <div className="mt-6">
-        {!result ? (
-          <EmptyState title="Search a Haribhagat" description="Type a name, surname or village above to see their visits and which hard disk and folder to open." />
-        ) : result.items.length === 0 ? (
-          <EmptyState title={t("noResults")} description="Try fewer filters or a different spelling. You can search in English and Gujarati." />
+        {result.items.length === 0 ? (
+          result.latest ? (
+            <EmptyState title="No entries yet" description="Add a new entry to record which hard disk and folder hold a Haribhagat's photos." />
+          ) : (
+            <EmptyState title={t("noResults")} description="Try fewer filters or a different spelling. You can search in English and Gujarati." />
+          )
         ) : (
           <>
-            <p className="mb-3 text-sm text-muted">{result.total} visit(s) found</p>
+            {result.latest ? (
+              <h2 className="mb-3 text-base font-semibold">Latest entries</h2>
+            ) : (
+              <p className="mb-3 text-sm text-muted">{result.total} visit(s) found</p>
+            )}
             <div className="grid gap-4 lg:grid-cols-2">
               {result.items.map((visit) => (
                 <VisitCard key={visit.id} visit={visit} canEdit={can(user, "visit.write")} />
