@@ -27,12 +27,12 @@ export default function LoginPage() {
         <RedirectIfSignedIn />
       </Suspense>
 
-      <Image src="/images/temple.png" alt="" fill priority sizes="100vw" className="scale-110 object-cover blur-2xl" aria-hidden />
+      <Image src="/images/temple-night.png" alt="" fill priority sizes="100vw" className="scale-110 object-cover blur-2xl" aria-hidden />
       <div aria-hidden className="absolute inset-0 bg-gradient-to-br from-brand-to/90 via-brand-to/80 to-black/80" />
 
       <div className="fade-up relative grid w-full max-w-5xl overflow-hidden rounded-3xl bg-surface shadow-2xl shadow-black/40 lg:min-h-[34rem] lg:grid-cols-[1.05fr_1fr]">
         <section className="relative hidden flex-col justify-between overflow-hidden p-8 text-white lg:flex">
-          <Image src="/images/temple.png" alt="" fill sizes="(min-width: 1024px) 560px, 0px" className="object-cover" aria-hidden />
+          <Image src="/images/temple-night.png" alt="" fill sizes="(min-width: 1024px) 560px, 0px" className="object-cover" aria-hidden />
           <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-black/45 via-brand-to/55 to-brand-to/90" />
 
           <div className="relative">
