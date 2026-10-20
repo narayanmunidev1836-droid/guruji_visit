@@ -74,14 +74,14 @@ export function HaribhagatForm({ person, labels, returnTo, countries = [], modal
       {modal && <CloseWhenSaved onDone={onDone} />}
       <DuplicateWarning />
       <div className="grid gap-4 sm:grid-cols-2">
+        <Field label={labels.surname} name="surname" required>
+          <Input name="surname" defaultValue={v.surname ?? ""} required maxLength={100} autoComplete="off" />
+        </Field>
         <Field label={labels.name} name="name" required>
           <Input name="name" defaultValue={v.name ?? ""} required maxLength={100} autoComplete="off" />
         </Field>
         <Field label={labels.fatherName} name="fatherName">
           <Input name="fatherName" defaultValue={v.fatherName ?? ""} maxLength={100} autoComplete="off" />
-        </Field>
-        <Field label={labels.surname} name="surname" required>
-          <Input name="surname" defaultValue={v.surname ?? ""} required maxLength={100} autoComplete="off" />
         </Field>
         <Field label={labels.gam} name="gam">
           <SuggestInput name="gam" field="gam" defaultValue={v.gam ?? ""} maxLength={100} />

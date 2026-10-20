@@ -202,6 +202,17 @@ export const VISIT_CARD_INCLUDE = {
   haribhagats: { orderBy: { isPrimary: "desc" }, include: { haribhagat: { select: PERSON_SELECT } } },
 };
 
+/**
+ * Hard disks and events used by the most recently created entries, newest first, by default only THE last one used (shared by all staff: one person's batch
+ * of entries is what the next person is likely to continue with). Used to show them on top of the New entry dropdowns.
+ */
+export async function getRecentlyUsed(limit = 1) {
+  const latest = (field) =>
+    db.visit.groupBy({ by: [field], where: { [field]: { not: null } }, _max: { createdAt: true }, orderBy: { _max: { createdAt: "desc" } }, take: limit });
+  const [disks, events] = await Promise.all([latest("hardDiskId"), latest("eventId")]);
+  return { diskIds: disks.map((row) => row.hardDiskId), eventIds: events.map((row) => row.eventId) };
+}
+
 export async function getVisit(id) {
   return db.visit.findUnique({
     where: { id },

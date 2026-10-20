@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth/dal";
 import { can } from "@/lib/permissions";
 import { t } from "@/lib/labels";
-import { getVisit } from "@/lib/services/visits";
+import { getRecentlyUsed, getVisit } from "@/lib/services/visits";
 import { listDisksForSelect } from "@/lib/services/disks";
 import { listEventsForSelect } from "@/lib/services/events";
 import { personName, placeTypeOptions } from "@/lib/ui-labels";
@@ -19,7 +19,7 @@ export default async function EditVisitPage({ params }) {
   const visit = await getVisit(id);
   if (!visit) notFound();
 
-  const [events, disks] = await Promise.all([listEventsForSelect(visit.eventId), listDisksForSelect(visit.hardDiskId)]);
+  const [events, disks, recent] = await Promise.all([listEventsForSelect(visit.eventId), listDisksForSelect(visit.hardDiskId), getRecentlyUsed()]);
   const people = visit.haribhagats.map((l) => l.haribhagat);
   const primaryId = visit.haribhagats.find((l) => l.isPrimary)?.haribhagatId ?? null;
 
@@ -43,6 +43,8 @@ export default async function EditVisitPage({ params }) {
             disks={disks}
             placeTypes={placeTypeOptions()}
             selectedPeople={people}
+            recentDiskIds={recent.diskIds}
+            recentEventIds={recent.eventIds}
             labels={{
               haribhagats: t("haribhagats"),
               hardDiskName: t("hardDiskName"),

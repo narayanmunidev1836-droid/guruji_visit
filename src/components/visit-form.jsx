@@ -6,7 +6,9 @@ import { createVisitAction, updateVisitAction } from "@/actions/visits";
 import { ActionForm, Field, FormActions, SubmitButton } from "@/components/ui/form";
 import { buttonClasses } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Input, Select, Textarea } from "@/components/ui/inputs";
+import { Input, Textarea } from "@/components/ui/inputs";
+import { withRecent } from "@/lib/recent";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { HaribhagatPicker } from "@/components/haribhagat-picker";
 import { SavedEntryDialog } from "@/components/saved-entry-dialog";
 import { VisitPersonFields } from "@/components/visit-person-fields";
@@ -31,7 +33,7 @@ export function VisitForm(props) {
   );
 }
 
-function VisitFormFields({ visit, events, disks, placeTypes, selectedPeople, initialPerson, canSeeMobile = true, countries, labels, onNewEntry }) {
+function VisitFormFields({ visit, events, disks, placeTypes, selectedPeople, initialPerson, canSeeMobile = true, countries, recentDiskIds = [], recentEventIds = [], labels, onNewEntry }) {
   const editing = Boolean(visit);
   const action = editing ? updateVisitAction : createVisitAction;
   return (
@@ -53,30 +55,32 @@ function VisitFormFields({ visit, events, disks, placeTypes, selectedPeople, ini
 
         <div className="grid gap-x-3 gap-y-3 sm:grid-cols-3">
           <Field label={labels.eventName} name="eventId" required>
-            <Select
+            <SearchableSelect
               name="eventId"
               required
               defaultValue={visit?.eventId ?? ""}
-              placeholder="Select…"
-              options={events.map((e) => ({ value: e.id, label: e.isActive ? e.name : `${e.name} (inactive)` }))}
+              placeholder="Search or select an event"
+              clearable={false}
+              options={withRecent(events.map((e) => ({ value: e.id, label: e.isActive ? e.name : `${e.name} (inactive)` })), recentEventIds)}
             />
           </Field>
           <Field label={labels.date} name="visitDate" required>
             <DatePicker name="visitDate" required defaultValue={visit?.visitDate ?? ""} />
           </Field>
           <Field label={labels.placeType} name="placeType" required>
-            <Select name="placeType" required defaultValue={visit?.placeType ?? ""} placeholder="Select…" options={placeTypes} />
+            <SearchableSelect name="placeType" required defaultValue={visit?.placeType ?? ""} placeholder="Search or select a place" clearable={false} options={placeTypes} />
           </Field>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-[1fr_2fr]">
           <Field label={`2. ${labels.hardDiskName}`} name="hardDiskId" required>
-            <Select
+            <SearchableSelect
               name="hardDiskId"
               required
               defaultValue={visit?.hardDiskId ?? ""}
-              placeholder="Select…"
-              options={disks.map((d) => ({ value: d.id, label: d.isActive === false ? `${d.labelName} (inactive)` : d.labelName }))}
+              placeholder="Search or select a hard disk"
+              clearable={false}
+              options={withRecent(disks.map((d) => ({ value: d.id, label: d.isActive === false ? `${d.labelName} (inactive)` : d.labelName })), recentDiskIds)}
             />
           </Field>
           <Field

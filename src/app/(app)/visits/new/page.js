@@ -7,6 +7,7 @@ import { placeTypeOptions } from "@/lib/ui-labels";
 import { listActiveDisks } from "@/lib/services/disks";
 import { listActiveEvents } from "@/lib/services/events";
 import { listCountries } from "@/lib/services/countries";
+import { getRecentlyUsed } from "@/lib/services/visits";
 import { getHaribhagat } from "@/lib/services/haribhagats";
 import { Card, CardBody, PageHeader } from "@/components/ui/card";
 import { VisitForm } from "@/components/visit-form";
@@ -24,11 +25,12 @@ export default async function NewVisitPage({ searchParams }) {
   const raw = await searchParams;
   const preselectedId = asId(raw.haribhagat); // "New entry" button on a Haribhagat page
 
-  const [events, disks, person, countries] = await Promise.all([
+  const [events, disks, person, countries, recent] = await Promise.all([
     listActiveEvents(),
     listActiveDisks(),
     preselectedId ? getHaribhagat(user, preselectedId) : null,
     listCountries(),
+    getRecentlyUsed(),
   ]);
 
   return (
@@ -42,6 +44,8 @@ export default async function NewVisitPage({ searchParams }) {
               disks={disks}
               placeTypes={placeTypeOptions()}
             countries={countries}
+            recentDiskIds={recent.diskIds}
+            recentEventIds={recent.eventIds}
               initialPerson={
                 person
                   ? {
