@@ -83,7 +83,6 @@ function VisitFormFields({ visit, events, disks, placeTypes, selectedPeople, ini
             label={`3. ${labels.folder}`}
             name="folderPath"
             required
-            hint="Path inside the disk; a pasted Windows path is fine (drive letter dropped)."
           >
             <Input name="folderPath" required defaultValue={visit?.folderPath ?? ""} autoComplete="off" placeholder="e.g. 2019/March/Patel Home" />
           </Field>

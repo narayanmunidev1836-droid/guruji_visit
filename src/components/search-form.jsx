@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DebounceInput } from "@/components/ui/debounce-input";
 import { GetForm } from "@/components/ui/get-form";
+import { MobileInput } from "@/components/ui/mobile-input";
 import { Input, Label, Select } from "@/components/ui/inputs";
 
 function F({ label, children, className }) {
@@ -75,7 +76,7 @@ export function SearchForm({ values, events, disks, allowMobile }) {
           </F>
           {allowMobile && (
             <F label={t("mobileNo")}>
-              <Input name="mobileNo" inputMode="tel" defaultValue={values.mobileNo ?? ""} />
+              <MobileInput name="mobileNo" defaultValue={values.mobileNo ?? ""} />
             </F>
           )}
           <F label={t("dateFrom")}>

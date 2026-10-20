@@ -28,51 +28,53 @@ export default async function NewVisitPage({ searchParams }) {
   return (
     <>
 
-      <Card className="max-w-6xl">
-        <CardBody className="p-4 sm:p-5">
-          <VisitForm
-            events={events}
-            disks={disks}
-            placeTypes={placeTypeOptions()}
-            initialPerson={
-              person
-                ? {
-                  id: person.id,
-                  name: person.name,
-                  fatherName: person.fatherName,
-                  surname: person.surname,
-                  gam: person.gam,
-                  taluko: person.taluko,
-                  jillo: person.jillo,
-                  pincode: person.pincode,
-                  mobileNo: person.mobileNo,
-                  mobileMasked: person.mobileMasked,
-                }
-                : null
-            }
-            canSeeMobile={canViewMobile(user, getEnv().mobileVisibleRoles)}
-            labels={{
-              haribhagats: t("haribhagats"),
-              name: t("name"),
-              fatherName: t("fatherName"),
-              surname: t("surname"),
-              gam: t("gam"),
-              taluko: t("taluko"),
-              jillo: t("jillo"),
-              pincode: t("pincode"),
-              mobileNo: t("mobileNo"),
-              hardDiskName: t("hardDiskName"),
-              folder: t("folder"),
-              eventName: t("eventName"),
-              date: t("date"),
-              placeType: t("placeType"),
-              notes: t("notes"),
-              save: t("save"),
-              cancel: t("cancel"),
-            }}
-          />
-        </CardBody>
-      </Card>
+      <div className="flex items-center justify-center lg:min-h-[calc(100dvh-3rem)]">
+        <Card className="w-full max-w-5xl">
+          <CardBody className="p-4 sm:p-5">
+            <VisitForm
+              events={events}
+              disks={disks}
+              placeTypes={placeTypeOptions()}
+              initialPerson={
+                person
+                  ? {
+                    id: person.id,
+                    name: person.name,
+                    fatherName: person.fatherName,
+                    surname: person.surname,
+                    gam: person.gam,
+                    taluko: person.taluko,
+                    jillo: person.jillo,
+                    pincode: person.pincode,
+                    mobileNo: person.mobileNo,
+                    mobileMasked: person.mobileMasked,
+                  }
+                  : null
+              }
+              canSeeMobile={canViewMobile(user, getEnv().mobileVisibleRoles)}
+              labels={{
+                haribhagats: t("haribhagats"),
+                name: t("name"),
+                fatherName: t("fatherName"),
+                surname: t("surname"),
+                gam: t("gam"),
+                taluko: t("taluko"),
+                jillo: t("jillo"),
+                pincode: t("pincode"),
+                mobileNo: t("mobileNo"),
+                hardDiskName: t("hardDiskName"),
+                folder: t("folder"),
+                eventName: t("eventName"),
+                date: t("date"),
+                placeType: t("placeType"),
+                notes: t("notes"),
+                save: t("save"),
+                cancel: t("cancel"),
+              }}
+            />
+          </CardBody>
+        </Card>
+      </div>
     </>
   );
 }

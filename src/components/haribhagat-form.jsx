@@ -5,6 +5,7 @@ import { AlertTriangle } from "lucide-react";
 import { saveHaribhagatAction } from "@/actions/haribhagats";
 import { ActionForm, Field, FormActions, SubmitButton, useFormState } from "@/components/ui/form";
 import { buttonClasses } from "@/components/ui/button";
+import { MobileInput } from "@/components/ui/mobile-input";
 import { Input } from "@/components/ui/inputs";
 
 function DuplicateWarning() {
@@ -74,13 +75,10 @@ export function HaribhagatForm({ person, labels, returnTo }) {
         </Field>
         {labels.mobileNo !== null && (
           <Field label={labels.mobileNo} name="mobileNo" hint={v.mobileMasked ? "Hidden for your role. Leave empty to keep the stored number." : "10 digit mobile number"}>
-            <Input
+            <MobileInput
               name="mobileNo"
               defaultValue={v.mobileMasked ? "" : (v.mobileNo ?? "")}
               placeholder={v.mobileMasked ? v.mobileNo : undefined}
-              inputMode="tel"
-              maxLength={20}
-              autoComplete="off"
               disabled={Boolean(v.mobileMasked)}
             />
           </Field>

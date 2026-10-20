@@ -4,6 +4,7 @@ import {
   diskLabelKey,
   eventNameKey,
   makeDupKey,
+  mobileInputValue,
   normalizeMobile,
   normalizePincode,
   normalizeText,
@@ -89,9 +90,26 @@ describe("normalizeMobile", () => {
     expect(normalizeMobile("abcdefghij").error).toBeTruthy();
   });
 
-  it("keeps international numbers with a + prefix", () => {
-    expect(normalizeMobile("+44 7911 123456")).toEqual({ value: "+447911123456" });
+  it("does not accept international or longer numbers", () => {
+    expect(normalizeMobile("+44 7911 123456").error).toBeTruthy();
     expect(normalizeMobile("+1234").error).toBeTruthy();
+    expect(normalizeMobile("98765432101").error).toBeTruthy();
+  });
+});
+
+describe("mobileInputValue", () => {
+  it("keeps digits only and at most 10", () => {
+    expect(mobileInputValue("98765 43210")).toBe("9876543210");
+    expect(mobileInputValue("98a76")).toBe("9876");
+    expect(mobileInputValue("98765432109999")).toBe("9876543210");
+    expect(mobileInputValue("૯૮૭૬૫")).toBe("98765");
+    expect(mobileInputValue(null)).toBe("");
+  });
+
+  it("drops a pasted +91 / 91 / 0 prefix", () => {
+    expect(mobileInputValue("+91 98765 43210")).toBe("9876543210");
+    expect(mobileInputValue("919876543210")).toBe("9876543210");
+    expect(mobileInputValue("09876543210")).toBe("9876543210");
   });
 });
 

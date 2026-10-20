@@ -38,26 +38,27 @@ export function makeDupKey({ name, fatherName, surname, gam }) {
 }
 
 /**
- * Normalizes a phone number for storage as a STRING.
- * - Indian mobiles are stored as exactly 10 digits (a leading +91 / 91 / 0 is removed).
- * - Numbers that start with "+" and are not +91 are kept as "+<digits>" (8-15 digits).
+ * Normalizes a phone number for storage as a STRING: exactly 10 digits, starting with 6-9 (a leading +91 / 91 / 0 that
+ * came from pasting is removed). Nothing else is accepted - no longer or international numbers.
  * Returns { value } on success, { error } when the number is not acceptable, or { value: null } for empty input.
  */
 export function normalizeMobile(input) {
   const raw = normalizeText(input);
   if (raw === null) return { value: null };
   const ascii = toAsciiDigits(raw);
-  const hasPlus = ascii.startsWith("+");
   let digits = ascii.replace(/\D/g, "");
-
-  if (hasPlus && !digits.startsWith("91")) {
-    if (digits.length >= 8 && digits.length <= 15) return { value: `+${digits}` };
-    return { error: "Enter a valid international number or a 10 digit mobile number." };
-  }
   if (digits.length === 12 && digits.startsWith("91")) digits = digits.slice(2);
   if (digits.length === 11 && digits.startsWith("0")) digits = digits.slice(1);
   if (/^[6-9]\d{9}$/.test(digits)) return { value: digits };
   return { error: "Enter a valid 10 digit mobile number." };
+}
+
+/** What a mobile input box keeps while typing / pasting: digits only (Gujarati digits too), at most 10. */
+export function mobileInputValue(value) {
+  let digits = toAsciiDigits(value ?? "").replace(/\D/g, "");
+  if (digits.length === 12 && digits.startsWith("91")) digits = digits.slice(2);
+  if (digits.length === 11 && digits.startsWith("0")) digits = digits.slice(1);
+  return digits.slice(0, 10);
 }
 
 /** Pincode is stored as a string so leading zeros are never lost. */

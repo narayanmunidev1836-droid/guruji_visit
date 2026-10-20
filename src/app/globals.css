@@ -151,6 +151,10 @@ body {
   }
 
   .ui-select::picker(select) {
+    /* Always open BELOW the field (the browser would otherwise flip it above when space is short); a short list scrolls. */
+    position-area: block-end span-inline-end;
+    position-try-order: normal;
+    position-try-fallbacks: none;
     margin-block: 0.25rem;
     padding: 0.375rem;
     max-height: 18rem;

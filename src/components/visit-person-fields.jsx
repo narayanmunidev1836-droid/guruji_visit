@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { AlertTriangle, Loader2, Search, UserCheck, UserPlus, X } from "lucide-react";
+import { AlertTriangle, Loader2, Search, UserPlus, X } from "lucide-react";
 import { haribhagatDetailsAction, pickerSearchAction } from "@/actions/haribhagats";
 import { Field, SubmitButton, useFormState } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
 import { DebounceInput } from "@/components/ui/debounce-input";
+import { MobileInput } from "@/components/ui/mobile-input";
 import { Input, Label } from "@/components/ui/inputs";
 
 const FIELDS = ["surname", "name", "fatherName", "mobileNo", "gam", "taluko", "jillo", "pincode"];
@@ -140,21 +142,29 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels }
 
       <div>
         <Label>{labels.haribhagats}</Label>
-        <div className="relative">
-          <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-          <DebounceInput
-            key={searchKey}
-            type="search"
-            onDebouncedChange={onQuery}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") event.preventDefault(); // Enter must not submit the visit form
-            }}
-            placeholder="Search an existing Haribhagat by name, surname, village or mobile…"
-            className="pl-10"
-            aria-label="Search Haribhagat"
-            autoComplete="off"
-          />
-          {(searching || loading) && <Loader2 aria-hidden className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted" />}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+            <DebounceInput
+              key={searchKey}
+              type="search"
+              onDebouncedChange={onQuery}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") event.preventDefault(); // Enter must not submit the visit form
+              }}
+              placeholder="Search an existing Haribhagat by name, surname, village or mobile…"
+              className="pl-10"
+              aria-label="Search Haribhagat"
+              autoComplete="off"
+            />
+            {(searching || loading) && <Loader2 aria-hidden className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted" />}
+        </div>
+        {locked && (
+          <Button type="button" variant="secondary" onClick={clear}>
+            <X className="h-4 w-4" aria-hidden />
+            Clear
+          </Button>
+        )}
         </div>
 
         {query.trim().length >= 2 && searched && (
@@ -181,19 +191,6 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels }
         )}
       </div>
 
-      {locked ? (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#f0d0b8] bg-primary-soft px-3 py-2 text-sm">
-          <span className="inline-flex items-center gap-2 font-medium text-primary">
-            <UserCheck className="h-4 w-4" aria-hidden /> Existing Haribhagat selected
-          </span>
-          <button type="button" onClick={clear} className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
-            <X className="h-4 w-4" aria-hidden /> Clear / add a new one
-          </button>
-        </div>
-      ) : (
-        <p className="text-xs text-muted">Not in the list? Choose “Create new Haribhagat” above, or just fill in the details below - a new Haribhagat is saved together with this entry.</p>
-      )}
-
       <div className="grid gap-x-3 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
         <Field label={labels.surname} name="surname" required={!locked}>
           <Input name="surname" maxLength={100} {...bind("surname")} />
@@ -206,7 +203,7 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels }
         </Field>
         {canSeeMobile && (
           <Field label={labels.mobileNo} name="mobileNo">
-            <Input name="mobileNo" inputMode="tel" maxLength={20} placeholder={locked ? undefined : "10 digits"} {...bind("mobileNo")} />
+            <MobileInput name="mobileNo" placeholder={locked ? undefined : "10 digits"} {...bind("mobileNo")} />
           </Field>
         )}
         <Field label={labels.gam} name="gam">

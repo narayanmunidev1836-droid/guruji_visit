@@ -22,7 +22,7 @@ function today() {
 }
 
 const selectClass =
-  "h-8 rounded-lg border border-border bg-white px-2 text-sm font-medium text-foreground focus:border-ring focus:outline-none focus:ring-[3px] focus:ring-ring/20";
+  "ui-select h-8 rounded-lg border border-border bg-white px-2 text-sm font-medium text-foreground focus:border-ring focus:outline-none focus:ring-[3px] focus:ring-ring/20";
 
 /**
  * Date field in the app's own style. The whole field opens the calendar (not just an icon). Posts `name` as YYYY-MM-DD
