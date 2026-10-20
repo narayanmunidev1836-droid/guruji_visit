@@ -23,11 +23,11 @@ export const getCurrentUser = cache(async () => {
   if (!session) return null;
   const user = await db.user.findUnique({
     where: { id: session.userId },
-    select: { id: true, name: true, email: true, role: true, isActive: true, passwordHash: true },
+    select: { id: true, name: true, email: true, role: true, isActive: true, passwordHash: true, canCreateDisks: true, canCreateEvents: true },
   });
   if (!user || !user.isActive) return null;
   if (session.pv !== passwordFingerprint(user.passwordHash)) return null;
-  return { id: user.id, name: user.name, email: user.email, role: user.role };
+  return { id: user.id, name: user.name, email: user.email, role: user.role, canCreateDisks: user.canCreateDisks, canCreateEvents: user.canCreateEvents };
 });
 
 /** For pages / layouts: redirects to the login page when there is no valid session. */

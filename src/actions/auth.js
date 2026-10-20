@@ -15,10 +15,10 @@ const PER_IP = { limit: 30, windowMs: 15 * 60 * 1000 };
 
 export async function loginAction(_prev, formData) {
   return runAction(async () => {
-    const email = String(formData.get("email") ?? "").trim().toLowerCase();
+    const login = String(formData.get("login") ?? formData.get("email") ?? "").trim().toLowerCase();
     const password = String(formData.get("password") ?? "");
     const ip = await getClientIp();
-    const accountKey = `login:${ip}:${email}`;
+    const accountKey = `login:${ip}:${login}`;
     const ipKey = `login-ip:${ip}`;
 
     const blocked = [peek(accountKey, PER_ACCOUNT), peek(ipKey, PER_IP)].find((r) => !r.allowed);
@@ -27,11 +27,11 @@ export async function loginAction(_prev, formData) {
       return fail(`Too many failed attempts. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`);
     }
 
-    const result = await authenticate(email, password);
+    const result = await authenticate(login, password);
     if (!result.ok) {
       hit(accountKey, PER_ACCOUNT);
       hit(ipKey, PER_IP);
-      return fail("Invalid email or password.");
+      return fail("Invalid login or password.");
     }
 
     reset(accountKey);

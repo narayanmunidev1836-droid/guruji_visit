@@ -53,6 +53,32 @@ export function normalizeMobile(input) {
   return { error: "Enter a valid 10 digit mobile number." };
 }
 
+export const MAX_USERNAME_LENGTH = 50;
+
+/**
+ * Username for logging in: any text (spaces at the ends removed, repeated spaces collapsed), stored in lower case so it does
+ * not matter how it is typed. Only a sensible maximum length applies.
+ */
+export function normalizeUsername(input) {
+  const text = normalizeText(input);
+  if (text === null) return { value: null };
+  if (text.length > MAX_USERNAME_LENGTH) return { error: `Username can be at most ${MAX_USERNAME_LENGTH} characters.` };
+  return { value: text.toLocaleLowerCase("en-US") };
+}
+
+/**
+ * What the login box could mean: the typed text in lower case (it may be a username or an e-mail) and, when it looks like a
+ * phone number, that number normalised to 10 digits. Returns null for empty input. The caller looks for a user by every
+ * possibility, so usernames need no special format.
+ */
+export function loginCandidates(input) {
+  const text = normalizeText(input);
+  if (text === null) return null;
+  const lower = text.toLocaleLowerCase("en-US");
+  const looksLikePhone = /^[+\d\s()-]+$/.test(toAsciiDigits(lower));
+  return { text: lower, mobile: looksLikePhone ? (normalizeMobile(lower).value ?? null) : null };
+}
+
 /** What a mobile input box keeps while typing / pasting: digits only (Gujarati digits too), at most 10. */
 export function mobileInputValue(value) {
   let digits = toAsciiDigits(value ?? "").replace(/\D/g, "");

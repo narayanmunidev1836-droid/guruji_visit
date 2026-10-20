@@ -35,7 +35,7 @@ export default async function EventsPage() {
       )}
 
       {events.length === 0 ? (
-        <EmptyState title="No events yet" description="Add event names (for example Pathramani, Vichran) above." />
+        <EmptyState title="No events yet" description={canCreate ? "Add event names (for example Pathramani, Vichran) above." : "An administrator needs to add event names (for example Pathramani, Vichran), or give you the right to."} />
       ) : (
         <Card>
           <Table>

@@ -12,7 +12,18 @@ describe("roles", () => {
   });
 
   it("staff can manage people, visits and photo metadata", () => {
-    for (const p of ["haribhagat.write", "visit.write", "photo.write", "disk.create", "event.create"]) expect(can(staff, p)).toBe(true);
+    for (const p of ["haribhagat.write", "visit.write", "photo.write"]) expect(can(staff, p)).toBe(true);
+  });
+
+  it("staff can add hard disks / events only when an admin granted it", () => {
+    for (const p of ["disk.create", "event.create"]) {
+      expect(can(admin, p)).toBe(true);
+      expect(can(staff, p)).toBe(false);
+    }
+    expect(can({ ...staff, canCreateDisks: true }, "disk.create")).toBe(true);
+    expect(can({ ...staff, canCreateDisks: true }, "event.create")).toBe(false);
+    expect(can({ ...staff, canCreateEvents: true }, "event.create")).toBe(true);
+    expect(can({ ...staff, canCreateEvents: true }, "disk.manage")).toBe(false); // a grant never gives edit / deactivate
   });
 
   it("only admins edit/deactivate events and disks, manage users and see the audit log", () => {

@@ -10,10 +10,10 @@ export function LoginForm({ labels }) {
   const [show, setShow] = useState(false);
   return (
     <ActionForm action={loginAction} className="space-y-4">
-      <Field label={labels.email} name="email">
+      <Field label={labels.login} name="login">
         <span className="relative block">
           <User aria-hidden className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <Input type="text" name="email" autoComplete="username" autoCapitalize="none" spellCheck={false} required autoFocus className="pl-9" />
+          <Input type="text" name="login" autoComplete="username" autoCapitalize="none" spellCheck={false} required autoFocus className="pl-9" />
         </span>
       </Field>
       <Field label={labels.password} name="password">
@@ -32,7 +32,7 @@ export function LoginForm({ labels }) {
         </span>
       </Field>
       <SubmitButton className="w-full" size="lg">
-        {labels.login}
+        {labels.submit}
         <ArrowRight className="h-4 w-4" aria-hidden />
       </SubmitButton>
     </ActionForm>

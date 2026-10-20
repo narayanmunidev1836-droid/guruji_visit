@@ -5,18 +5,18 @@ import { listUsers } from "@/lib/services/users";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader, PageHeader } from "@/components/ui/card";
 import { Table, Td, Th } from "@/components/ui/table";
-import { AddUserForm, EditUserForm } from "@/app/(app)/users/user-forms";
+import { AddUserForm, UserRowActions } from "@/app/(app)/users/user-forms";
 
 export const metadata = { title: "Users" };
 
 export default async function UsersPage() {
   const admin = await requireAdminPage();
   const users = await listUsers();
-  const labels = { name: t("name"), email: t("email"), role: t("role"), add: t("add"), save: t("save"), active: t("active") };
+  const labels = { name: t("name"), email: t("email"), role: t("role"), add: t("add"), save: t("save"), active: t("active"), edit: t("edit") };
 
   return (
     <>
-      <PageHeader title={t("users")} description="Administrators manage everything. Staff can search, add people and visits, and view scans." />
+      <PageHeader title={t("users")} description="Administrators manage everything. Staff can search and add people and entries; an administrator can also let a staff user add hard disks and events." />
 
       <Card className="mb-6">
         <CardHeader title="Add a user" />
@@ -30,8 +30,11 @@ export default async function UsersPage() {
           <thead>
             <tr>
               <Th>{t("name")}</Th>
+              <Th>Username</Th>
               <Th>{t("email")}</Th>
+              <Th>Mobile</Th>
               <Th>{t("role")}</Th>
+              <Th>Can add</Th>
               <Th>Status</Th>
               <Th>Created</Th>
               <Th className="text-right">Actions</Th>
@@ -44,9 +47,22 @@ export default async function UsersPage() {
                   {u.name}
                   {u.id === admin.id && <Badge className="ml-2">you</Badge>}
                 </Td>
+                <Td className="font-mono text-xs">{u.username ?? <span className="text-muted">-</span>}</Td>
                 <Td className="text-muted">{u.email}</Td>
+                <Td className="font-mono text-xs">{u.mobileNo ?? <span className="text-muted">-</span>}</Td>
                 <Td>
                   <Badge tone={u.role === "ADMIN" ? "primary" : "neutral"}>{u.role === "ADMIN" ? "Admin" : "Staff"}</Badge>
+                </Td>
+                <Td>
+                  {u.role === "ADMIN" ? (
+                    <span className="text-xs text-muted">everything</span>
+                  ) : (
+                    <div className="flex flex-wrap gap-1">
+                      {u.canCreateDisks && <Badge tone="info">Hard disks</Badge>}
+                      {u.canCreateEvents && <Badge tone="info">Events</Badge>}
+                      {!u.canCreateDisks && !u.canCreateEvents && <span className="text-xs text-muted">-</span>}
+                    </div>
+                  )}
                 </Td>
                 <Td>
                   <Badge tone={u.isActive ? "success" : "neutral"} dot>
@@ -55,12 +71,7 @@ export default async function UsersPage() {
                 </Td>
                 <Td className="whitespace-nowrap text-muted">{formatInstant(u.createdAt)}</Td>
                 <Td className="text-right">
-                  <details className="text-left">
-                    <summary className="cursor-pointer text-right text-sm text-primary">{t("edit")}</summary>
-                    <div className="mt-3 min-w-[min(100%,34rem)]">
-                      <EditUserForm user={u} labels={labels} />
-                    </div>
-                  </details>
+                  <UserRowActions user={u} labels={labels} />
                 </Td>
               </tr>
             ))}

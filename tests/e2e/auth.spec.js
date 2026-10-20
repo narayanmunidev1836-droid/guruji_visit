@@ -21,7 +21,7 @@ test.describe("authentication", () => {
     await page.getByLabel("Email").fill(ADMIN.email);
     await page.getByLabel(/^Password/).fill("definitely-wrong");
     await page.getByRole("button", { name: /Log in/ }).click();
-    await expect(alertBox(page)).toContainText("Invalid email or password.");
+    await expect(alertBox(page)).toContainText("Invalid login or password.");
     await expect(page).toHaveURL(/\/login/);
   });
 
@@ -30,7 +30,7 @@ test.describe("authentication", () => {
     await page.getByLabel("Email").fill(`${unique("nobody")}@example.test`);
     await page.getByLabel(/^Password/).fill("whatever-123456");
     await page.getByRole("button", { name: /Log in/ }).click();
-    await expect(alertBox(page)).toContainText("Invalid email or password.");
+    await expect(alertBox(page)).toContainText("Invalid login or password.");
   });
 
   test("logging in and out", async ({ page }) => {
@@ -59,7 +59,7 @@ test.describe("authentication", () => {
       await page.getByLabel("Email").fill(email);
       await page.getByLabel(/^Password/).fill(`wrong-password-${i}`);
       await page.getByRole("button", { name: /Log in/ }).click();
-      await expect(alertBox(page)).toContainText("Invalid email or password.");
+      await expect(alertBox(page)).toContainText("Invalid login or password.");
     }
     await page.getByLabel(/^Password/).fill("wrong-password-again");
     await page.getByRole("button", { name: /Log in/ }).click();

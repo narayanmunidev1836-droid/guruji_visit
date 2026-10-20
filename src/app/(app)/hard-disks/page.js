@@ -37,7 +37,7 @@ export default async function HardDisksPage() {
       )}
 
       {disks.length === 0 ? (
-        <EmptyState title="No hard disks registered" description="Register each disk with the label printed on its sticker." />
+        <EmptyState title="No hard disks registered" description={canCreate ? "Register each disk with the label printed on its sticker." : "An administrator needs to register the hard disks, or give you the right to."} />
       ) : (
         <Card>
           <Table>

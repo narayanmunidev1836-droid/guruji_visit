@@ -82,7 +82,7 @@ test.describe("role based access", () => {
     await user.getByLabel("Email").fill(email);
     await user.getByLabel(/^Password/).fill(password);
     await user.getByRole("button", { name: /Log in/ }).click();
-    await expect(alertBox(user)).toContainText("Invalid email or password.");
+    await expect(alertBox(user)).toContainText("Invalid login or password.");
 
     await Promise.all([adminContext.close(), userContext.close()]);
   });

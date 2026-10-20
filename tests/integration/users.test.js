@@ -13,7 +13,7 @@ describe.skipIf(!HAS_DB)("users and authentication", () => {
   afterAll(() => db?.$disconnect());
   beforeEach(async () => {
     await resetDb(db);
-    const result = await users.createUser({ id: null }, { name: "Admin", email: "Admin@Example.org", role: "ADMIN", password: "correct-horse-1" });
+    const result = await users.createUser({ id: null }, { name: "Admin", username: "Admin", mobileNo: "9876500001", email: "Admin@Example.org", role: "ADMIN", password: "correct-horse-1" });
     admin = result.user;
   });
 
@@ -25,10 +25,10 @@ describe.skipIf(!HAS_DB)("users and authentication", () => {
   });
 
   it("rejects duplicate e-mails, weak passwords, bad roles and invalid e-mails", async () => {
-    expect((await users.createUser(admin, { name: "X", email: "ADMIN@example.org", role: "STAFF", password: "long-enough-pw" })).fieldErrors.email).toBeTruthy();
-    expect((await users.createUser(admin, { name: "X", email: "x@example.org", role: "STAFF", password: "short" })).fieldErrors.password).toBeTruthy();
-    expect((await users.createUser(admin, { name: "X", email: "x@example.org", role: "ROOT", password: "long-enough-pw" })).fieldErrors.role).toBeTruthy();
-    expect((await users.createUser(admin, { name: "X", email: "not-an-email", role: "STAFF", password: "long-enough-pw" })).fieldErrors.email).toBeTruthy();
+    expect((await users.createUser(admin, { name: "X", username: "xuser", email: "ADMIN@example.org", role: "STAFF", password: "long-enough-pw" })).fieldErrors.email).toBeTruthy();
+    expect((await users.createUser(admin, { name: "X", username: "xuser", email: "x@example.org", role: "STAFF", password: "short" })).fieldErrors.password).toBeTruthy();
+    expect((await users.createUser(admin, { name: "X", username: "xuser", email: "x@example.org", role: "ROOT", password: "long-enough-pw" })).fieldErrors.role).toBeTruthy();
+    expect((await users.createUser(admin, { name: "X", username: "xuser", email: "not-an-email", role: "STAFF", password: "long-enough-pw" })).fieldErrors.email).toBeTruthy();
   });
 
   it("authenticates with the right password, ignoring e-mail case and padding", async () => {
@@ -37,8 +37,43 @@ describe.skipIf(!HAS_DB)("users and authentication", () => {
     expect(ok.user.id).toBe(admin.id);
   });
 
+  it("logs in with the username, the e-mail or the mobile number", async () => {
+    for (const login of ["admin", " ADMIN ", "admin@example.org", "9876500001", "+91 98765 00001"]) {
+      const result = await users.authenticate(login, "correct-horse-1");
+      expect(result.ok, login).toBe(true);
+      expect(result.user.id).toBe(admin.id);
+    }
+    expect((await users.authenticate("admin", "wrong-password")).ok).toBe(false);
+    expect((await users.authenticate("9876500002", "correct-horse-1")).ok).toBe(false);
+  });
+
+  it("still logs in a user whose e-mail field is a plain word (like a seeded \"admin\")", async () => {
+    await db.user.create({ data: { name: "Old", email: "root", role: "STAFF", passwordHash: await (await import("@/lib/auth/password")).hashPassword("root-password-1") } });
+    expect((await users.authenticate("root", "root-password-1")).ok).toBe(true);
+    expect((await users.authenticate("ROOT", "root-password-1")).ok).toBe(true);
+  });
+
+  it("accepts any text as a username, even digits or an @, and still logs in with it", async () => {
+    const base = { name: "W", role: "STAFF", password: "long-enough-pw" };
+    expect((await users.createUser(admin, { ...base, email: "w1@example.org", username: "Brijesh Vasoya" })).ok).toBe(true);
+    expect((await users.createUser(admin, { ...base, email: "w2@example.org", username: "1234" })).ok).toBe(true);
+    expect((await users.createUser(admin, { ...base, email: "w3@example.org", username: "me@work" })).ok).toBe(true);
+    for (const login of ["brijesh vasoya", "BRIJESH  VASOYA", "1234", "me@work"]) {
+      expect((await users.authenticate(login, "long-enough-pw")).ok, login).toBe(true);
+    }
+  });
+
+  it("keeps usernames and mobile numbers unique and valid", async () => {
+    const base = { name: "N", email: "n@example.org", role: "STAFF", password: "long-enough-pw" };
+    expect((await users.createUser(admin, { ...base, username: "ADMIN" })).fieldErrors.username).toBeTruthy(); // same username, any case
+    expect((await users.createUser(admin, { ...base, username: "nuser", mobileNo: "9876500001" })).fieldErrors.mobileNo).toBeTruthy();
+    expect((await users.createUser(admin, { ...base, username: "x".repeat(51) })).fieldErrors.username).toBeTruthy(); // only the length is limited
+    expect((await users.createUser(admin, { ...base, username: "nuser", mobileNo: "12345" })).fieldErrors.mobileNo).toBeTruthy();
+    expect((await users.createUser(admin, { ...base, username: "nuser", mobileNo: "9876500002" })).ok).toBe(true);
+  });
+
   it("gives the same generic error for unknown e-mail, wrong password and inactive users", async () => {
-    const staff = (await users.createUser(admin, { name: "S", email: "s@example.org", role: "STAFF", password: "staff-password-1" })).user;
+    const staff = (await users.createUser(admin, { name: "S", username: "suser", email: "s@example.org", role: "STAFF", password: "staff-password-1" })).user;
     await users.updateUser(admin, staff.id, { name: "S", role: "STAFF", isActive: "" });
     const results = await Promise.all([
       users.authenticate("nobody@example.org", "whatever-1234"),
@@ -48,7 +83,7 @@ describe.skipIf(!HAS_DB)("users and authentication", () => {
     ]);
     for (const r of results) {
       expect(r.ok).toBe(false);
-      expect(r.error).toBe("Invalid email or password.");
+      expect(r.error).toBe("Invalid login or password.");
     }
   });
 
@@ -58,12 +93,12 @@ describe.skipIf(!HAS_DB)("users and authentication", () => {
     const deactivate = await users.updateUser({ id: 999 }, admin.id, { name: "Admin", role: "ADMIN", isActive: "" });
     expect(deactivate.ok).toBe(false);
 
-    const second = (await users.createUser(admin, { name: "A2", email: "a2@example.org", role: "ADMIN", password: "another-password" })).user;
+    const second = (await users.createUser(admin, { name: "A2", username: "a2user", email: "a2@example.org", role: "ADMIN", password: "another-password" })).user;
     expect((await users.updateUser({ id: second.id }, admin.id, { name: "Admin", role: "STAFF", isActive: "true" })).ok).toBe(true);
   });
 
   it("an administrator cannot deactivate their own account", async () => {
-    await users.createUser(admin, { name: "A2", email: "a2@example.org", role: "ADMIN", password: "another-password" });
+    await users.createUser(admin, { name: "A2", username: "a2user", email: "a2@example.org", role: "ADMIN", password: "another-password" });
     const result = await users.updateUser(admin, admin.id, { name: "Admin", role: "ADMIN", isActive: "" });
     expect(result.ok).toBe(false);
     expect(result.error).toMatch(/own account/);
@@ -82,7 +117,7 @@ describe.skipIf(!HAS_DB)("users and authentication", () => {
   });
 
   it("an administrator can reset another user's password", async () => {
-    const staff = (await users.createUser(admin, { name: "S", email: "s@example.org", role: "STAFF", password: "staff-password-1" })).user;
+    const staff = (await users.createUser(admin, { name: "S", username: "suser", email: "s@example.org", role: "STAFF", password: "staff-password-1" })).user;
     expect((await users.resetPassword(admin, staff.id, "short")).ok).toBe(false);
     expect((await users.resetPassword(admin, staff.id, "a-new-password-2")).ok).toBe(true);
     expect((await users.authenticate("s@example.org", "a-new-password-2")).ok).toBe(true);

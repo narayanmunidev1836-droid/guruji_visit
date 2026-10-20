@@ -24,21 +24,30 @@ export function mobileForUser(mobileNo, user, mobileVisibleRoles) {
   return canViewMobile(user, mobileVisibleRoles) ? mobileNo : maskMobile(mobileNo);
 }
 
-/** Staff may manage people, visits and photo metadata and register new hard disks and add new events. Only admins edit/deactivate master data and manage users and tokens. */
+/** Staff may manage people, visits and photo metadata. Adding hard disks / events needs a grant from an admin, per user. Only admins edit/deactivate master data and manage users and tokens. */
 export const PERMISSIONS = {
   "haribhagat.write": [ROLES.ADMIN, ROLES.STAFF],
   "visit.write": [ROLES.ADMIN, ROLES.STAFF],
   "photo.write": [ROLES.ADMIN, ROLES.STAFF],
-  "event.create": [ROLES.ADMIN, ROLES.STAFF],
+  "event.create": [ROLES.ADMIN], // staff only when an administrator granted it (GRANTS below)
   "event.manage": [ROLES.ADMIN],
-  "disk.create": [ROLES.ADMIN, ROLES.STAFF],
+  "disk.create": [ROLES.ADMIN], // staff only when an administrator granted it (GRANTS below)
   "disk.manage": [ROLES.ADMIN],
   "user.manage": [ROLES.ADMIN],
   "audit.view": [ROLES.ADMIN],
 };
 
+/** Permissions an administrator can give to a single user: permission -> the flag on the user record. */
+export const GRANTS = {
+  "disk.create": "canCreateDisks",
+  "event.create": "canCreateEvents",
+};
+
 export function can(user, permission) {
   if (!user) return false;
   const roles = PERMISSIONS[permission];
-  return Boolean(roles) && roles.includes(user.role);
+  if (!roles) return false;
+  if (roles.includes(user.role)) return true;
+  const flag = GRANTS[permission];
+  return Boolean(flag) && user[flag] === true;
 }

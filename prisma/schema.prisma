@@ -42,9 +42,14 @@ model User {
   id           Int      @id @default(autoincrement())
   name         String
   email        String   @unique
+  username     String?  @unique // lower-case; with the e-mail or the mobile number it is a way to log in
+  mobileNo     String?  @unique // 10 digits
   passwordHash String
   role         Role     @default(STAFF)
   isActive     Boolean  @default(true)
+  // Extra rights an administrator can give to one user (admins can always do both).
+  canCreateDisks  Boolean @default(false)
+  canCreateEvents Boolean @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

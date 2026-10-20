@@ -4,7 +4,9 @@ import {
   diskLabelKey,
   eventNameKey,
   makeDupKey,
+  loginCandidates,
   mobileInputValue,
+  normalizeUsername,
   normalizeMobile,
   normalizePincode,
   normalizeText,
@@ -94,6 +96,37 @@ describe("normalizeMobile", () => {
     expect(normalizeMobile("+44 7911 123456").error).toBeTruthy();
     expect(normalizeMobile("+1234").error).toBeTruthy();
     expect(normalizeMobile("98765432101").error).toBeTruthy();
+  });
+});
+
+describe("normalizeUsername", () => {
+  it("accepts any text: lower-cased, trimmed, repeated spaces collapsed", () => {
+    expect(normalizeUsername("  Ramesh.Patel_01 ")).toEqual({ value: "ramesh.patel_01" });
+    expect(normalizeUsername("Brijesh  Vasoya")).toEqual({ value: "brijesh vasoya" });
+    expect(normalizeUsername("9876543210")).toEqual({ value: "9876543210" });
+    expect(normalizeUsername("a@b")).toEqual({ value: "a@b" });
+    expect(normalizeUsername("ab")).toEqual({ value: "ab" });
+    expect(normalizeUsername("")).toEqual({ value: null });
+  });
+
+  it("only limits the length", () => {
+    expect(normalizeUsername("x".repeat(51)).error).toBeTruthy();
+    expect(normalizeUsername("x".repeat(50)).value).toBe("x".repeat(50));
+  });
+});
+
+describe("loginCandidates", () => {
+  it("gives the typed text in lower case and a mobile number when it looks like one", () => {
+    expect(loginCandidates("  Admin@Example.ORG ")).toEqual({ text: "admin@example.org", mobile: null });
+    expect(loginCandidates("98765 43210")).toEqual({ text: "98765 43210", mobile: "9876543210" });
+    expect(loginCandidates("+91 98765-43210")).toEqual({ text: "+91 98765-43210", mobile: "9876543210" });
+    expect(loginCandidates("Ramesh.Patel")).toEqual({ text: "ramesh.patel", mobile: null });
+    expect(loginCandidates("12345")).toEqual({ text: "12345", mobile: null }); // not a valid mobile, still a possible username
+  });
+
+  it("returns null for empty input", () => {
+    expect(loginCandidates("  ")).toBeNull();
+    expect(loginCandidates(null)).toBeNull();
   });
 });
 

@@ -25,7 +25,7 @@ npm test                                                         # unit (no DB)
 TEST_DATABASE_URL=postgres://… npm run test:integration          # DB tests, TRUNCATEs the DB! (helpers refuse the .env database)
 ```
 **After a Prisma schema change: `prisma generate` and restart `next dev`** (the running server keeps the old client in memory → "Expected SortOrder, provided Object" style errors).
-Admin login = `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` from `.env`. Seed once per database. E2E tests (`tests/e2e`) still target the OLD flows and need rewriting.
+Admin login = `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` from `.env`. **Login accepts a username, an e-mail or a 10-digit mobile number** (a username is **any text**, only max 50 chars, stored lower-case; the typed login is tried as username, e-mail and mobile - `loginCandidates` in `normalize.js`; `User.username` / `User.mobileNo`, both unique, set by an admin on `/users`; the seeded admin has only an e-mail until a username is added). Seed once per database. E2E tests (`tests/e2e`) still target the OLD flows and need rewriting.
 
 ## Architecture in one picture
 ```
@@ -54,7 +54,7 @@ zod, audit log; return `{ok, …}` / `{ok:false, error, fieldErrors}`) → Prism
 | App shell / nav | `src/components/app-shell.jsx` (server), `app-frame.jsx` (client; desktop sidebar, phone top bar + bottom tabs with More menu) |
 
 ## Key flows
-1. **Admin or staff registers a disk** (`/hard-disks`, permission `disk.create`) → label unique (case-insens.). Edit/deactivate = admin (`disk.manage`).
+1. **Admin registers a disk** (`/hard-disks`, permission `disk.create`) → label unique (case-insens.). A **staff** user can only do this (and add events, `event.create`) when an admin ticked *Add hard disks / Add events* for them on `/users` (`User.canCreateDisks/canCreateEvents`, see `GRANTS` in `permissions.js`). Edit/deactivate = admin (`disk.manage` / `event.manage`).
 2. **New entry** (the "Visit" record) is its own page `/visits/new` (sidebar item "New entry", plus buttons on the Dashboard and the Haribhagat page; `?haribhagat=ID` preselects): search an existing Haribhagat (details fill the inputs, read-only) or type
    a new one; choose the hard disk (dropdown of active disks) and type the path (the UI says **Path**; the DB column is `folderPath`). Similar existing people → warning with "Use this person" / "save as new".
 3. **Search** `/search` is the only place that lists entries (there is no Visits page/sidebar item; `/visits` redirects to `/search`). Each `VisitCard` has View (`/visits/:id`), Edit (`/visits/:id/edit`) and Delete (hard delete, confirmed, audited as `visit.delete`; permission `visit.write`) and shows notes. Saving a new entry opens an **"Entry saved" dialog** (`saved-entry-dialog.jsx`: only the saved data, with Edit → `/visits/:id/edit`); closing it remounts `/visits/new` as a fresh empty form. Editing an entry redirects to its view page. Details: person filters match the *same* Haribhagat of a visit; with **no filter it shows "Latest entries"** (newest *created* first, 10 per page); with filters, matches newest visit date first, 20 per page, as `VisitCard`s with a Copy-path button.
