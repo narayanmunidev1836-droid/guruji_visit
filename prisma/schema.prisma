@@ -1,0 +1,248 @@
+// Guruji Pathramani Photo Archive - database schema.
+// Original photos stay on USB hard disks; PostgreSQL only stores metadata and file locations.
+// See docs/DATABASE.md for the reasoning behind each model.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum PlaceType {
+  HOME
+  OFFICE
+  TEMPLE
+  OTHER
+}
+
+// What the last known scan says about the original file.
+// UNKNOWN = never verified by an indexer, AVAILABLE = seen in the latest full scan,
+// MISSING = was indexed before but not found in a later complete scan of its disk.
+enum Availability {
+  UNKNOWN
+  AVAILABLE
+  MISSING
+}
+
+enum ScanStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(STAFF)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  haribhagatsCreated Haribhagat[]
+  visitsCreated      Visit[]
+  indexerTokens      IndexerToken[]
+  scansStarted       ScanJob[]
+  auditLogs          AuditLog[]
+}
+
+model Haribhagat {
+  id         Int     @id @default(autoincrement())
+  name       String
+  fatherName String?
+  surname    String
+  gam        String? // village
+  taluko     String? // taluka
+  jillo      String? // district
+  pincode    String? // string: never numeric, keeps leading zeros
+  mobileNo   String? // string: never numeric
+  // Normalized "name|father|surname|gam" used only to warn about possible duplicates.
+  dupKey      String
+  createdById Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy User?             @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  visits    VisitHaribhagat[]
+
+  @@index([name])
+  @@index([surname])
+  @@index([gam])
+  @@index([jillo])
+  @@index([mobileNo])
+  @@index([dupKey])
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  name        String
+  nameKey     String   @unique // lower-cased, whitespace-normalized name
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  visits Visit[]
+}
+
+model HardDisk {
+  id               Int       @id @default(autoincrement())
+  labelName        String // sticker label shown to humans, e.g. HDD-001
+  labelKey         String    @unique // upper-cased, whitespace-normalized label (case-insensitive uniqueness)
+  description      String?
+  // Random id written by the indexer into a marker file at the disk root. Never a drive letter.
+  stableIdentifier String?   @unique
+  serialNumber     String?
+  notes            String?
+  isActive         Boolean   @default(true)
+  // Last time an indexer reported this disk as connected (heartbeat or scan activity).
+  lastSeenAt       DateTime?
+  lastScanAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  photos Photo[]
+  scans  ScanJob[]
+  visits Visit[]
+}
+
+// One visit (e.g. a Pathramani at a Haribhagat home) belongs to one or more Haribhagats and records WHERE the
+// photos of that visit are kept: a hard disk + a folder path inside it (typed by staff; nothing is indexed).
+model Visit {
+  id          Int        @id @default(autoincrement())
+  eventId     Int?
+  visitDate   DateTime?  @db.Date
+  // Where the photos are kept: hard disk + folder relative to the disk root ("" = disk root). Never a drive letter.
+  hardDiskId  Int?
+  folderPath  String     @default("")
+  placeType   PlaceType?
+  notes       String?
+  createdById Int?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  event       Event?            @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  hardDisk    HardDisk?         @relation(fields: [hardDiskId], references: [id], onDelete: Restrict)
+  createdBy   User?             @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  haribhagats VisitHaribhagat[]
+  photos      Photo[]
+
+  @@index([visitDate])
+  @@index([eventId])
+  @@index([hardDiskId])
+}
+
+model VisitHaribhagat {
+  visitId      Int
+  haribhagatId Int
+  isPrimary    Boolean @default(false)
+
+  visit      Visit      @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  haribhagat Haribhagat @relation(fields: [haribhagatId], references: [id], onDelete: Restrict)
+
+  @@id([visitId, haribhagatId])
+  @@index([haribhagatId])
+}
+
+model Photo {
+  id               Int          @id @default(autoincrement())
+  // Null while the photo is only indexed and not yet linked to a visit => "Needs review".
+  visitId          Int?
+  hardDiskId       Int
+  // Path relative to the disk root, always with "/" separators. Never an absolute path.
+  relativePath     String
+  folderPath       String // directory part of relativePath ("" for disk root)
+  originalFileName String
+  format           String? // jpg | png | webp | heic ...
+  fileSizeBytes    Int?
+  // Partial fingerprint (size + head/tail bytes). Same content on two disks is a legitimate copy.
+  fileHash         String?
+  fileMtime        DateTime?
+  exifDateTime     DateTime?
+  thumbnailKey     String?
+  availability     Availability @default(UNKNOWN)
+  lastSeenAt       DateTime?
+  lastScanId       Int?
+  notes            String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  visit    Visit?   @relation(fields: [visitId], references: [id], onDelete: SetNull)
+  hardDisk HardDisk @relation(fields: [hardDiskId], references: [id], onDelete: Restrict)
+  lastScan ScanJob? @relation(fields: [lastScanId], references: [id], onDelete: SetNull)
+
+  @@unique([hardDiskId, relativePath])
+  @@index([visitId])
+  @@index([fileHash])
+  @@index([exifDateTime])
+  @@index([hardDiskId, folderPath])
+  @@index([availability])
+}
+
+// Revocable credential used by the local indexer. Only a SHA-256 hash is stored.
+model IndexerToken {
+  id          Int       @id @default(autoincrement())
+  name        String
+  tokenHash   String    @unique
+  tokenPrefix String // first characters, only to help humans recognise a token
+  createdById Int
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  createdBy User      @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  scans     ScanJob[]
+}
+
+model ScanJob {
+  id               Int        @id @default(autoincrement())
+  hardDiskId       Int
+  indexerTokenId   Int?
+  startedById      Int?
+  isDryRun         Boolean    @default(false)
+  // Sub-folder that was scanned ("" = whole disk). Only whole-disk scans mark files as MISSING.
+  scanPath         String     @default("")
+  status           ScanStatus @default(RUNNING)
+  startedAt        DateTime   @default(now())
+  lastActivityAt   DateTime   @default(now())
+  finishedAt       DateTime?
+  filesScanned     Int        @default(0)
+  recordsCreated   Int        @default(0)
+  recordsUpdated   Int        @default(0)
+  recordsUnchanged Int        @default(0)
+  missingCount     Int        @default(0)
+  errorsCount      Int        @default(0)
+  errorSummary     String?
+
+  hardDisk     HardDisk      @relation(fields: [hardDiskId], references: [id], onDelete: Restrict)
+  indexerToken IndexerToken? @relation(fields: [indexerTokenId], references: [id], onDelete: SetNull)
+  startedBy    User?         @relation(fields: [startedById], references: [id], onDelete: SetNull)
+  photos       Photo[]
+
+  @@index([hardDiskId, startedAt])
+  @@index([status])
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  action    String // e.g. "disk.create", "event.deactivate"
+  entity    String
+  entityId  String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([entity, entityId])
+}
