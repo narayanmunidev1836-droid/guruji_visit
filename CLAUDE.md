@@ -42,7 +42,7 @@ zod, audit log; return `{ok, …}` / `{ok:false, error, fieldErrors}`) → Prism
 | DB schema / migrations / seed | `prisma/schema.prisma`, `prisma/migrations/`, `prisma/seed.mjs` |
 | Env validation (all config) | `src/lib/env.js` (+ `.env.example`) |
 | Login session, roles | `src/lib/auth/{session,jwt,password,dal}.js`, `src/lib/permissions.js`, `src/proxy.js`, `src/actions/auth.js` |
-| Visits (Haribhagat + disk + folder + event, date and place required; notes optional) | `src/lib/services/visits.js`, `src/actions/visits.js`, form `src/components/visit-form.jsx`, page `src/app/(app)/visits/new/page.js` |
+| Visits (Haribhagat, disk, folder, event, date and place all required; only notes optional) | `src/lib/services/visits.js`, `src/actions/visits.js`, form `src/components/visit-form.jsx`, page `src/app/(app)/visits/new/page.js` |
 | "New visit" Haribhagat inputs (search → fills surname/name/father/mobile/…; or type a new one) | `src/components/visit-person-fields.jsx`; server creates the Haribhagat with the visit (`createVisit`) |
 | Search visits by Haribhagat (filters, pagination) | `src/lib/services/search.js`, `person-filters.js`, page `src/app/(app)/search/page.js`, card `src/components/visit-card.jsx` |
 | People / events / disks | `src/lib/services/{haribhagats,events,disks}.js` |
@@ -55,9 +55,9 @@ zod, audit log; return `{ok, …}` / `{ok:false, error, fieldErrors}`) → Prism
 
 ## Key flows
 1. **Admin or staff registers a disk** (`/hard-disks`, permission `disk.create`) → label unique (case-insens.). Edit/deactivate = admin (`disk.manage`).
-2. **New visit** is its own page `/visits/new` (buttons on Visits, Dashboard and the Haribhagat page; `?haribhagat=ID` preselects): search an existing Haribhagat (details fill the inputs, read-only) or type
+2. **New entry** (the "Visit" record) is its own page `/visits/new` (sidebar item "New entry", plus buttons on the Dashboard and the Haribhagat page; `?haribhagat=ID` preselects): search an existing Haribhagat (details fill the inputs, read-only) or type
    a new one; choose the hard disk (dropdown of active disks) and type the folder. Similar existing people → warning with "Use this person" / "save as new".
-3. **Search** `/search`: person filters match the *same* Haribhagat of a visit; shows nothing until a filter is set; results paginated (20) as `VisitCard`s with a Copy-path button.
+3. **Search** `/search` is the only place that lists entries (there is no Visits page/sidebar item; `/visits` redirects to `/search`). Each `VisitCard` has View (`/visits/:id`), Edit (`/visits/:id/edit`) and Delete (hard delete, confirmed, audited as `visit.delete`; permission `visit.write`) and shows notes. After saving a new entry you land on `/search?haribhagatId=…&saved=1`. Details: person filters match the *same* Haribhagat of a visit; shows nothing until a filter is set; results paginated (20) as `VisitCard`s with a Copy-path button.
 4. Haribhagat detail page lists that person's visits the same way.
 
 ## Rules & gotchas (learned the hard way — keep them)

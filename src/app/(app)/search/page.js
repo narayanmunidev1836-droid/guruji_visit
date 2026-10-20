@@ -1,10 +1,11 @@
 import { requireUser } from "@/lib/auth/dal";
 import { getEnv } from "@/lib/env";
-import { canViewMobile } from "@/lib/permissions";
+import { can, canViewMobile } from "@/lib/permissions";
 import { t } from "@/lib/labels";
 import { filtersToParams, hasSearchFilters, parseSearchParams, searchVisits } from "@/lib/services/search";
 import { listEvents } from "@/lib/services/events";
 import { listDisks } from "@/lib/services/disks";
+import { Alert } from "@/components/ui/alert";
 import { PageHeader, EmptyState } from "@/components/ui/card";
 import { Pagination } from "@/components/ui/pagination";
 import { SearchForm } from "@/components/search-form";
@@ -14,7 +15,8 @@ export const metadata = { title: "Search" };
 
 export default async function SearchPage({ searchParams }) {
   const user = await requireUser();
-  const filters = parseSearchParams(await searchParams);
+  const raw = await searchParams;
+  const filters = parseSearchParams(raw);
   const params = filtersToParams(filters);
   const searched = hasSearchFilters(filters);
 
@@ -28,6 +30,12 @@ export default async function SearchPage({ searchParams }) {
         description="Search a Haribhagat by name, surname, village or mobile. You see every visit of that Haribhagat with the hard disk and folder where the photos are kept."
       />
 
+      {raw.saved && (
+        <Alert tone="success" className="mb-4">
+          Entry saved.
+        </Alert>
+      )}
+
       <SearchForm values={params} events={events} disks={disks} allowMobile={allowMobile} />
 
       <div className="mt-6">
@@ -40,7 +48,7 @@ export default async function SearchPage({ searchParams }) {
             <p className="mb-3 text-sm text-muted">{result.total} visit(s) found</p>
             <div className="grid gap-4 lg:grid-cols-2">
               {result.items.map((visit) => (
-                <VisitCard key={visit.id} visit={visit} />
+                <VisitCard key={visit.id} visit={visit} canEdit={can(user, "visit.write")} />
               ))}
             </div>
             <div className="mt-6">

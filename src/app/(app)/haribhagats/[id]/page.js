@@ -42,7 +42,7 @@ export default async function HaribhagatPage({ params }) {
             {can(user, "visit.write") && (
               <ButtonLink href={`/visits/new?haribhagat=${person.id}`} variant="secondary">
                 <Plus className="h-4 w-4" aria-hidden />
-                New visit
+                New entry
               </ButtonLink>
             )}
             {can(user, "haribhagat.write") && (
@@ -82,7 +82,7 @@ export default async function HaribhagatPage({ params }) {
           ) : (
             <div className="space-y-4">
               {visits.map((visit) => (
-                <VisitCard key={visit.id} visit={visit} />
+                <VisitCard key={visit.id} visit={visit} canEdit={can(user, "visit.write")} />
               ))}
             </div>
           )}

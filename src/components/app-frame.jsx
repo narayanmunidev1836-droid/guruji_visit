@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   CalendarDays,
+  CirclePlus,
   ClipboardCheck,
   Ellipsis,
   HardDrive,
@@ -20,7 +21,7 @@ import {
   Users,
 } from "lucide-react";
 
-const ICONS = { LayoutDashboard, Search, ClipboardCheck, CalendarDays, Users, Tags, HardDrive, ScanSearch, UserCog, Settings };
+const ICONS = { LayoutDashboard, Search, CirclePlus, ClipboardCheck, CalendarDays, Users, Tags, HardDrive, ScanSearch, UserCog, Settings };
 
 const TAB_WIDTH = 76; // min px per bottom tab, incl. the More tab
 const DEFAULT_TABS = 4;

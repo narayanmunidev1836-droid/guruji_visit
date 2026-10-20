@@ -3,6 +3,7 @@ import { t } from "@/lib/labels";
 import { placeTypeOptions } from "@/lib/ui-labels";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
+import { GetForm } from "@/components/ui/get-form";
 import { Input, Label, Select } from "@/components/ui/inputs";
 
 function F({ label, children, className }) {
@@ -15,7 +16,7 @@ function F({ label, children, className }) {
 }
 
 /**
- * Visit search form (plain GET form, works without JavaScript and keeps the URL shareable).
+ * Visit search form (GET form that navigates client-side without a page reload, keeps the URL shareable and works without JavaScript).
  * Event and hard disk options are passed in from database rows - nothing is hardcoded here.
  */
 export function SearchForm({ values, events, disks, allowMobile }) {
@@ -26,7 +27,8 @@ export function SearchForm({ values, events, disks, allowMobile }) {
   );
 
   return (
-    <form action="/search" method="get" role="search" className="rounded-2xl border border-border bg-surface p-4 shadow-card">
+    // key: remount when the URL filters change, so "Reset" (and back/forward) refill the inputs.
+    <GetForm key={JSON.stringify(values)} action="/search" role="search" className="rounded-2xl border border-border bg-surface p-4 shadow-card">
       {values.haribhagatId && <input type="hidden" name="haribhagatId" value={values.haribhagatId} />}
       <div className="flex flex-col gap-2 sm:flex-row">
         <div className="relative flex-1">
@@ -95,6 +97,6 @@ export function SearchForm({ values, events, disks, allowMobile }) {
           </F>
         </div>
       </details>
-    </form>
+    </GetForm>
   );
 }

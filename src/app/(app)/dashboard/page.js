@@ -8,6 +8,7 @@ import { t } from "@/lib/labels";
 import { BarChart } from "@/components/bar-chart";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, EmptyState } from "@/components/ui/card";
+import { GetForm } from "@/components/ui/get-form";
 import { Input } from "@/components/ui/inputs";
 import { VisitCard } from "@/components/visit-card";
 
@@ -41,13 +42,13 @@ export default async function DashboardPage() {
           </div>
           {can(user, "visit.write") && (
             <Link href="/visits/new" className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-[#b0451a] shadow-md transition hover:bg-[#fff5f0]">
-              <Plus aria-hidden className="h-4 w-4" /> New visit
+              <Plus aria-hidden className="h-4 w-4" /> New entry
             </Link>
           )}
         </div>
       </div>
 
-      <form action="/search" className="flex gap-2" role="search">
+      <GetForm action="/search" className="flex gap-2" role="search">
         <div className="relative flex-1">
           <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
@@ -61,7 +62,7 @@ export default async function DashboardPage() {
         <Button type="submit" size="lg">
           {t("searchAction")}
         </Button>
-      </form>
+      </GetForm>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {STATS.map((card, i) => {
@@ -125,9 +126,9 @@ export default async function DashboardPage() {
 
         <section>
           <div className="mb-3 flex items-baseline justify-between gap-2">
-            <h2 className="font-semibold text-slate-800">Recent visits</h2>
-            <Link href="/visits" className="text-sm font-medium text-primary hover:underline">
-              All visits →
+            <h2 className="font-semibold text-slate-800">Recent entries</h2>
+            <Link href="/search" className="text-sm font-medium text-primary hover:underline">
+              Search →
             </Link>
           </div>
           {data.recentVisits.length === 0 ? (
@@ -135,7 +136,7 @@ export default async function DashboardPage() {
           ) : (
             <div className="space-y-4">
               {data.recentVisits.map((visit) => (
-                <VisitCard key={visit.id} visit={visit} />
+                <VisitCard key={visit.id} visit={visit} canEdit={can(user, "visit.write")} />
               ))}
             </div>
           )}

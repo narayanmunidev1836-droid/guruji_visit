@@ -51,9 +51,10 @@ describe.skipIf(!HAS_DB)("visits (Haribhagat + hard disk + folder)", () => {
     expect((await svc.getVisit(result.visit.id)).folderPath).toBe("MUKT SWAMI DATA/decstop");
   });
 
-  it("allows an empty folder (disk root) and rejects '..'", async () => {
-    const root = await svc.createVisit(staff, base({ folderPath: "" }));
-    expect((await svc.getVisit(root.visit.id)).folderPath).toBe("");
+  it("requires a folder and rejects '..'", async () => {
+    const empty = await svc.createVisit(staff, base({ folderPath: "" }));
+    expect(empty.ok).toBe(false);
+    expect(empty.fieldErrors.folderPath).toBeTruthy();
     const bad = await svc.createVisit(staff, base({ folderPath: "../secret" }));
     expect(bad.ok).toBe(false);
     expect(bad.fieldErrors.folderPath).toBeTruthy();
@@ -112,6 +113,15 @@ describe.skipIf(!HAS_DB)("visits (Haribhagat + hard disk + folder)", () => {
 
     const other = await makeDisk(db, "HDD-002", { stableIdentifier: null, isActive: false });
     expect((await svc.updateVisit(staff, created.id, base({ hardDiskId: String(other.id) }))).ok).toBe(false);
+  });
+
+  it("deletes an entry but keeps the people and the disk", async () => {
+    const created = (await svc.createVisit(staff, base())).visit;
+    expect((await svc.deleteVisit(staff, created.id)).ok).toBe(true);
+    expect(await db.visit.count()).toBe(0);
+    expect(await db.haribhagat.count()).toBe(2);
+    expect(await db.hardDisk.count()).toBe(1);
+    expect((await svc.deleteVisit(staff, created.id)).ok).toBe(false);
   });
 
   it("lists visits newest first with their disk and people", async () => {

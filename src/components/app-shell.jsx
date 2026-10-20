@@ -11,7 +11,7 @@ function buildNav(user) {
   const nav = [
     item("/dashboard", "LayoutDashboard", "dashboard", "exact"),
     item("/search", "Search", "search", "exact"),
-    item("/visits", "CalendarDays", "visits"),
+    item("/visits/new", "CirclePlus", "newEntry", "exact"),
     item("/haribhagats", "Users", "haribhagats"),
     item("/events", "Tags", "events"),
     item("/hard-disks", "HardDrive", "hardDisks"),

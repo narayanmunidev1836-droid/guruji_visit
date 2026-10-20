@@ -90,9 +90,9 @@ describe("visit folder", () => {
     expect(parseVisitFolder("d:/photos")).toEqual({ ok: true, folder: "photos" });
   });
 
-  it("allows an empty folder (disk root) and rejects '..'", () => {
-    expect(parseVisitFolder("")).toEqual({ ok: true, folder: "" });
-    expect(parseVisitFolder(String.raw`F:`)).toEqual({ ok: true, folder: "" });
+  it("requires a folder and rejects '..'", () => {
+    expect(parseVisitFolder("").fieldErrors.folderPath).toBe("Folder is required.");
+    expect(parseVisitFolder(String.raw`F:`).fieldErrors.folderPath).toBe("Folder is required.");
     expect(parseVisitFolder("a/../b").ok).toBe(false);
   });
 });

@@ -10,7 +10,7 @@ import { getHaribhagat } from "@/lib/services/haribhagats";
 import { Card, CardBody, PageHeader } from "@/components/ui/card";
 import { VisitForm } from "@/components/visit-form";
 
-export const metadata = { title: "New visit" };
+export const metadata = { title: "New entry" };
 
 const asId = (v) => {
   const n = Number(Array.isArray(v) ? v[0] : v);
@@ -21,7 +21,7 @@ export default async function NewVisitPage({ searchParams }) {
   const user = await requireUser();
   if (!can(user, "visit.write")) redirect("/visits");
   const raw = await searchParams;
-  const preselectedId = asId(raw.haribhagat); // "New visit" button on a Haribhagat page
+  const preselectedId = asId(raw.haribhagat); // "New entry" button on a Haribhagat page
 
   const [events, disks, person] = await Promise.all([listActiveEvents(), listActiveDisks(), preselectedId ? getHaribhagat(user, preselectedId) : null]);
 

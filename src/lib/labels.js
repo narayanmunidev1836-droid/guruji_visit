@@ -11,6 +11,7 @@ const DICTIONARY = {
   users: "Users",
   settings: "Settings",
   visits: "Visits",
+  newEntry: "New entry",
   review: "Needs review",
   logout: "Log out",
   login: "Log in",
@@ -61,7 +62,7 @@ const DICTIONARY = {
   activate: "Activate",
   deactivate: "Deactivate",
   openOriginal: "Open original",
-  copyPath: "Copy path",
+  copyPath: "Copy folder",
   copied: "Copied",
 
   // status

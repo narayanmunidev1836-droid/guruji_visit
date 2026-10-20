@@ -50,12 +50,14 @@ const visitWithNewPersonSchema = z.object({ haribhagatIds: z.any().optional(), .
 /**
  * Folder typed by staff, relative to the disk root. A pasted Windows path such as "F:\MUKT SWAMI DATA\decstop" is accepted:
  * the drive letter only says where the disk happened to be mounted, so it is dropped and "\" becomes "/".
- * Returns { ok, folder } or an error result. "" means the disk root.
+ * Returns { ok, folder } or an error result. The folder is required: an empty one (or just a drive letter) is rejected.
  */
 export function parseVisitFolder(input) {
   const text = String(input ?? "").trim().replace(/^([A-Za-z]:)?[\\/]*/, "");
   try {
-    return { ok: true, folder: normalizeFolderPath(text) };
+    const folder = normalizeFolderPath(text);
+    if (folder === "") return fail("Folder is required.", { folderPath: "Folder is required." });
+    return { ok: true, folder };
   } catch (error) {
     if (error instanceof InvalidPathError) return fail(error.message, { folderPath: error.message });
     throw error;
@@ -145,7 +147,8 @@ export async function createVisit(actor, input, { confirmDuplicate = false, canE
     });
   });
   await audit(actor, "visit.create", "Visit", visit.id, { disk: checked.disk.labelName, folder: folder.folder });
-  return ok({ visit });
+  const primary = links.find((l) => l.isPrimary) ?? links[0];
+  return ok({ visit, haribhagatId: primary?.haribhagatId ?? null });
 }
 
 export async function updateVisit(actor, id, input) {
@@ -178,6 +181,15 @@ export async function updateVisit(actor, id, input) {
     await tx.visitHaribhagat.createMany({ data: linked.links.map((l) => ({ ...l, visitId: id })) });
   });
   await audit(actor, "visit.update", "Visit", id);
+  return ok();
+}
+
+/** Permanently deletes one entry (its Haribhagat links go with it; the people and the disk stay). */
+export async function deleteVisit(actor, id) {
+  const current = await db.visit.findUnique({ where: { id }, include: { hardDisk: { select: { labelName: true } } } });
+  if (!current) return fail("Entry not found.");
+  await db.visit.delete({ where: { id } });
+  await audit(actor, "visit.delete", "Visit", id, { disk: current.hardDisk?.labelName ?? null, folder: current.folderPath });
   return ok();
 }
 

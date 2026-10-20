@@ -32,25 +32,6 @@ export function VisitForm({ visit, events, disks, placeTypes, selectedPeople, in
           <VisitPersonFields initialPerson={initialPerson ?? null} canSeeMobile={canSeeMobile} labels={{ ...labels, haribhagats: `1. ${labels.haribhagats}` }} />
         )}
 
-        <div className="grid gap-4 sm:grid-cols-[1fr_2fr]">
-          <Field label={`2. ${labels.hardDiskName}`} name="hardDiskId" required>
-            <Select
-              name="hardDiskId"
-              required
-              defaultValue={visit?.hardDiskId ?? ""}
-              placeholder="Select…"
-              options={disks.map((d) => ({ value: d.id, label: d.isActive === false ? `${d.labelName} (inactive)` : d.labelName }))}
-            />
-          </Field>
-          <Field
-            label={`3. ${labels.folder}`}
-            name="folderPath"
-            hint="Path inside the disk; a pasted Windows path is fine (drive letter dropped). Empty = disk root."
-          >
-            <Input name="folderPath" defaultValue={visit?.folderPath ?? ""} autoComplete="off" placeholder="e.g. 2019/March/Patel Home" />
-          </Field>
-        </div>
-
         <div className="grid gap-x-3 gap-y-3 sm:grid-cols-3">
           <Field label={labels.eventName} name="eventId" required>
             <Select
@@ -69,13 +50,33 @@ export function VisitForm({ visit, events, disks, placeTypes, selectedPeople, in
           </Field>
         </div>
 
+        <div className="grid gap-4 sm:grid-cols-[1fr_2fr]">
+          <Field label={`2. ${labels.hardDiskName}`} name="hardDiskId" required>
+            <Select
+              name="hardDiskId"
+              required
+              defaultValue={visit?.hardDiskId ?? ""}
+              placeholder="Select…"
+              options={disks.map((d) => ({ value: d.id, label: d.isActive === false ? `${d.labelName} (inactive)` : d.labelName }))}
+            />
+          </Field>
+          <Field
+            label={`3. ${labels.folder}`}
+            name="folderPath"
+            required
+            hint="Path inside the disk; a pasted Windows path is fine (drive letter dropped)."
+          >
+            <Input name="folderPath" required defaultValue={visit?.folderPath ?? ""} autoComplete="off" placeholder="e.g. 2019/March/Patel Home" />
+          </Field>
+        </div>
+
         <Field label={labels.notes} name="notes">
           <Textarea name="notes" rows={2} defaultValue={visit?.notes ?? ""} maxLength={1000} />
         </Field>
       </div>
 
       <FormActions className="mt-4 justify-end">
-        <Link href={editing ? `/visits/${visit.id}` : "/visits"} className={buttonClasses({ variant: "secondary" })}>
+        <Link href={editing ? `/visits/${visit.id}` : "/search"} className={buttonClasses({ variant: "secondary" })}>
           {labels.cancel}
         </Link>
         <SubmitButton>{labels.save}</SubmitButton>
