@@ -7,7 +7,8 @@ import { getCurrentUser, requirePermission } from "@/lib/auth/dal";
 import { getEnv } from "@/lib/env";
 import { canViewMobile } from "@/lib/permissions";
 import { formDataToObject } from "@/lib/validation";
-import { createHaribhagat, getHaribhagat, pickerSearch, updateHaribhagat } from "@/lib/services/haribhagats";
+import { listStates } from "@/lib/services/countries";
+import { createHaribhagat, deleteHaribhagat, getHaribhagat, pickerSearch, suggestPlaces, updateHaribhagat } from "@/lib/services/haribhagats";
 
 /** Type-ahead for the Haribhagat search on the entry form. Returns [] for anonymous callers. Mobile numbers are searchable / returned only for roles that may see them. */
 export async function pickerSearchAction(query) {
@@ -18,6 +19,20 @@ export async function pickerSearchAction(query) {
   return pickerSearch(text, { allowMobile: canViewMobile(user, getEnv().mobileVisibleRoles) });
 }
 
+/** Suggestions for village / taluko / district while typing (values already saved on other Haribhagats). */
+export async function suggestPlaceAction(field, query, context) {
+  const user = await getCurrentUser();
+  if (!user || typeof field !== "string") return [];
+  return suggestPlaces(field, typeof query === "string" ? query : "", context && typeof context === "object" ? context : {});
+}
+
+/** States of the chosen country for the State dropdown ([] when unknown: the form then shows a text box). */
+export async function listStatesAction(country) {
+  const user = await getCurrentUser();
+  if (!user || typeof country !== "string") return [];
+  return listStates(country);
+}
+
 /** Full details of one Haribhagat to fill the visit form after the user picked a search result. Mobile is masked for roles without access. */
 export async function haribhagatDetailsAction(id) {
   const user = await getCurrentUser();
@@ -25,8 +40,8 @@ export async function haribhagatDetailsAction(id) {
   if (!user || !Number.isInteger(number) || number <= 0) return null;
   const person = await getHaribhagat(user, number);
   if (!person) return null;
-  const { id: personId, name, fatherName, surname, gam, taluko, jillo, pincode, mobileNo, mobileMasked } = person;
-  return { id: personId, name, fatherName, surname, gam, taluko, jillo, pincode, mobileNo, mobileMasked };
+  const { id: personId, name, fatherName, surname, gam, taluko, jillo, state, country, pincode, mobileNo, mobileMasked } = person;
+  return { id: personId, name, fatherName, surname, gam, taluko, jillo, state, country, pincode, mobileNo, mobileMasked };
 }
 
 /**
@@ -49,7 +64,20 @@ export async function saveHaribhagatAction(_prev, formData) {
     if (!result.ok) return { ...result, values: input };
 
     revalidatePath("/haribhagats");
+    revalidatePath(`/haribhagats/${result.person.id}`);
+    if (input.modal === "1") return ok({ saved: true }); // saved from the dialog on the list: it closes itself, no page change
     const returnTo = typeof input.returnTo === "string" && input.returnTo.startsWith("/") && !input.returnTo.startsWith("//") ? input.returnTo : null;
     redirect(returnTo ?? `/haribhagats/${result.person.id}`);
+  });
+}
+
+export async function deleteHaribhagatAction(id) {
+  return runAction(async () => {
+    const user = await requirePermission("haribhagat.write");
+    const result = await deleteHaribhagat(user, Number(id));
+    if (!result.ok) return result;
+    revalidatePath("/haribhagats");
+    revalidatePath("/dashboard");
+    return ok();
   });
 }

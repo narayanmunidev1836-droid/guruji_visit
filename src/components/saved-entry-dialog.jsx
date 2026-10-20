@@ -64,7 +64,7 @@ export function SavedEntryDialog({ onClose }) {
             {saved.people.map((person) => (
               <div key={person.id} className="py-0.5">
                 <p className="font-medium">{[person.name, person.fatherName, person.surname].filter(Boolean).join(" ")}</p>
-                <p className="text-xs text-muted">{[person.gam, person.taluko, person.jillo, person.pincode].filter(Boolean).join(", ")}</p>
+                <p className="text-xs text-muted">{[person.gam, person.taluko, person.jillo, person.state, person.country, person.pincode].filter(Boolean).join(", ")}</p>
                 {person.mobileNo && <p className="font-mono text-xs text-muted">{person.mobileNo}</p>}
               </div>
             ))}

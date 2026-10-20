@@ -7,10 +7,15 @@ import { Field, SubmitButton, useFormState } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { DebounceInput } from "@/components/ui/debounce-input";
 import { MobileInput } from "@/components/ui/mobile-input";
+import { SuggestInput } from "@/components/ui/suggest-input";
+import { StateSelect } from "@/components/state-select";
 import { Input, Label } from "@/components/ui/inputs";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { countryOptions, DEFAULT_COUNTRY, DEFAULT_STATE } from "@/lib/countries";
 
-const FIELDS = ["surname", "name", "fatherName", "mobileNo", "gam", "taluko", "jillo", "pincode"];
-const EMPTY = Object.fromEntries(FIELDS.map((key) => [key, ""]));
+const FIELDS = ["surname", "name", "fatherName", "mobileNo", "gam", "taluko", "jillo", "state", "country", "pincode"];
+// A new person starts with the usual state and country already filled in.
+const EMPTY = { ...Object.fromEntries(FIELDS.map((key) => [key, ""])), state: DEFAULT_STATE, country: DEFAULT_COUNTRY };
 
 function toValues(person) {
   return Object.fromEntries(FIELDS.map((key) => [key, person?.[key] ?? ""]));
@@ -60,9 +65,9 @@ function DuplicateWarning({ onUse }) {
  * details of a new one (surname, name, father name, mobile, ...). Posts `haribhagatIds` for an existing person, otherwise
  * the typed fields, from which the server creates the Haribhagat together with the visit.
  */
-export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels }) {
+export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels, countries = [] }) {
   const [person, setPerson] = useState(initialPerson);
-  const [values, setValues] = useState(toValues(initialPerson));
+  const [values, setValues] = useState(initialPerson ? toValues(initialPerson) : EMPTY);
   const [query, setQuery] = useState("");
   const [searchKey, setSearchKey] = useState(0); // changing it clears the search box
   const [results, setResults] = useState([]);
@@ -127,6 +132,9 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels }
     clearSearch();
     setTimeout(() => root.current?.querySelector(`input[name="${guess.surname ? "fatherName" : "surname"}"]`)?.focus(), 0);
   }
+
+  const hint = (text) => (locked ? undefined : text); // placeholders only while the person is being typed in
+  const pick = (key) => (text) => setValues((current) => ({ ...current, [key]: text }));
 
   const bind = (key) => ({
     value: values[key],
@@ -193,30 +201,54 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels }
 
       <div className="grid gap-x-3 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
         <Field label={labels.surname} name="surname" required={!locked}>
-          <Input name="surname" maxLength={100} {...bind("surname")} />
+          <Input name="surname" maxLength={100} placeholder={hint("Surname")} {...bind("surname")} />
         </Field>
         <Field label={labels.name} name="name" required={!locked}>
-          <Input name="name" maxLength={100} {...bind("name")} />
+          <Input name="name" maxLength={100} placeholder={hint("Name")} {...bind("name")} />
         </Field>
         <Field label={labels.fatherName} name="fatherName">
-          <Input name="fatherName" maxLength={100} {...bind("fatherName")} />
+          <Input name="fatherName" maxLength={100} placeholder={hint("Father Name")} {...bind("fatherName")} />
         </Field>
         {canSeeMobile && (
           <Field label={labels.mobileNo} name="mobileNo">
             <MobileInput name="mobileNo" placeholder={locked ? undefined : "10 digits"} {...bind("mobileNo")} />
           </Field>
         )}
-        <Field label={labels.gam} name="gam">
-          <Input name="gam" maxLength={100} {...bind("gam")} />
-        </Field>
-        <Field label={labels.taluko} name="taluko">
-          <Input name="taluko" maxLength={100} {...bind("taluko")} />
-        </Field>
-        <Field label={labels.jillo} name="jillo">
-          <Input name="jillo" maxLength={100} {...bind("jillo")} />
-        </Field>
         <Field label={labels.pincode} name="pincode">
           <Input name="pincode" inputMode="numeric" maxLength={6} placeholder={locked ? undefined : "6 digits"} {...bind("pincode")} />
+        </Field>
+        <Field label={labels.gam} name="gam">
+          <SuggestInput name="gam" field="gam" context={{ taluko: values.taluko, jillo: values.jillo, state: values.state, country: values.country }} maxLength={100} placeholder={hint("Village")} {...bind("gam")} onPick={pick("gam")} />
+        </Field>
+        <Field label={labels.taluko} name="taluko">
+          <SuggestInput name="taluko" field="taluko" context={{ jillo: values.jillo, state: values.state, country: values.country }} maxLength={100} placeholder={hint("Taluko")} {...bind("taluko")} onPick={pick("taluko")} />
+        </Field>
+        <Field label={labels.jillo} name="jillo">
+          <SuggestInput name="jillo" field="jillo" context={{ state: values.state, country: values.country }} maxLength={100} placeholder={hint("District")} {...bind("jillo")} onPick={pick("jillo")} />
+        </Field>
+        <Field label={labels.state} name="state">
+          <StateSelect
+            country={values.country}
+            countries={countries}
+            value={values.state}
+            onChange={(state) => setValues((current) => ({ ...current, state }))}
+            disabled={locked}
+            placeholder={hint("State")}
+          />
+        </Field>
+        <Field label={labels.country} name="country">
+          {countries.length > 0 ? (
+            <SearchableSelect
+              name="country"
+              value={values.country}
+              onChange={(country) => setValues((current) => ({ ...current, country, state: country === DEFAULT_COUNTRY ? DEFAULT_STATE : "" }))}
+              disabled={locked}
+              placeholder="Search or select a country"
+              options={countryOptions(countries, values.country)}
+            />
+          ) : (
+            <SuggestInput name="country" field="country" maxLength={100} placeholder={hint("Type or pick a country")} {...bind("country")} onPick={pick("country")} />
+          )}
         </Field>
       </div>
 

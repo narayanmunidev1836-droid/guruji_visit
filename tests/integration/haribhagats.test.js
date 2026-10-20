@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { HAS_DB, getDb, makeUser, resetDb } from "./helpers.js";
+import { HAS_DB, getDb, makeDisk, makeUser, resetDb } from "./helpers.js";
 
 describe.skipIf(!HAS_DB)("Haribhagat directory", () => {
   let db;
@@ -134,6 +134,33 @@ describe.skipIf(!HAS_DB)("Haribhagat directory", () => {
     expect(rows).toHaveLength(1);
     expect(JSON.stringify(rows)).not.toContain("9876543210");
     expect(await svc.pickerSearch("   ")).toEqual([]);
+  });
+
+  it("suggests villages / talukas / districts from saved people, most used first, narrowed by context", async () => {
+    await svc.createHaribhagat(staff, person({ name: "A", gam: "Anand", taluko: "Anand", jillo: "Anand" }));
+    await svc.createHaribhagat(staff, person({ name: "B", gam: "Anand", taluko: "Anand", jillo: "Anand" }));
+    await svc.createHaribhagat(staff, person({ name: "C", gam: "Borsad", taluko: "Borsad", jillo: "Anand" }));
+    await svc.createHaribhagat(staff, person({ name: "D", gam: "Surat City", taluko: "Surat", jillo: "Surat" }));
+    expect((await svc.suggestPlaces("gam", "")).slice(0, 2)).toEqual(["ANAND", expect.any(String)]);
+    expect(await svc.suggestPlaces("gam", "bor")).toEqual(["BORSAD"]);
+    expect((await svc.suggestPlaces("taluko", "", { jillo: "surat" }))).toEqual(["SURAT"]);
+    expect(await svc.suggestPlaces("surname", "pat")).toEqual([]); // only place fields
+  });
+
+  it("deletes a Haribhagat only when no entry uses them", async () => {
+    const free = (await svc.createHaribhagat(staff, person({ name: "Free" }))).person;
+    const used = (await svc.createHaribhagat(staff, person({ name: "Used", fatherName: "Other" }))).person;
+    const disk = await makeDisk(db, "HDD-001");
+    await db.visit.create({ data: { hardDiskId: disk.id, folderPath: "A", haribhagats: { create: [{ haribhagatId: used.id, isPrimary: true }] } } });
+
+    const refused = await svc.deleteHaribhagat(staff, used.id);
+    expect(refused.ok).toBe(false);
+    expect(refused.error).toContain("1 entry");
+    expect(await db.haribhagat.count({ where: { id: used.id } })).toBe(1);
+
+    expect((await svc.deleteHaribhagat(staff, free.id)).ok).toBe(true);
+    expect(await db.haribhagat.count({ where: { id: free.id } })).toBe(0);
+    expect((await svc.deleteHaribhagat(staff, free.id)).ok).toBe(false);
   });
 
   it("the visit picker finds people by mobile only for roles that may see mobile numbers", async () => {

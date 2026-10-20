@@ -29,6 +29,8 @@ async function savedSummary(user, visitId) {
       gam: p.gam,
       taluko: p.taluko,
       jillo: p.jillo,
+      state: p.state,
+      country: p.country,
       pincode: p.pincode,
       mobileNo: p.mobileNo,
     })),

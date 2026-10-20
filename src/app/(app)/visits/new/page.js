@@ -6,6 +6,7 @@ import { can, canViewMobile } from "@/lib/permissions";
 import { placeTypeOptions } from "@/lib/ui-labels";
 import { listActiveDisks } from "@/lib/services/disks";
 import { listActiveEvents } from "@/lib/services/events";
+import { listCountries } from "@/lib/services/countries";
 import { getHaribhagat } from "@/lib/services/haribhagats";
 import { Card, CardBody, PageHeader } from "@/components/ui/card";
 import { VisitForm } from "@/components/visit-form";
@@ -23,18 +24,24 @@ export default async function NewVisitPage({ searchParams }) {
   const raw = await searchParams;
   const preselectedId = asId(raw.haribhagat); // "New entry" button on a Haribhagat page
 
-  const [events, disks, person] = await Promise.all([listActiveEvents(), listActiveDisks(), preselectedId ? getHaribhagat(user, preselectedId) : null]);
+  const [events, disks, person, countries] = await Promise.all([
+    listActiveEvents(),
+    listActiveDisks(),
+    preselectedId ? getHaribhagat(user, preselectedId) : null,
+    listCountries(),
+  ]);
 
   return (
     <>
 
       <div className="flex items-center justify-center lg:min-h-[calc(100dvh-3rem)]">
-        <Card className="w-full max-w-5xl">
-          <CardBody className="p-4 sm:p-5">
+        <Card className="w-full max-w-6xl">
+          <CardBody className="p-4">
             <VisitForm
               events={events}
               disks={disks}
               placeTypes={placeTypeOptions()}
+            countries={countries}
               initialPerson={
                 person
                   ? {
@@ -45,6 +52,8 @@ export default async function NewVisitPage({ searchParams }) {
                     gam: person.gam,
                     taluko: person.taluko,
                     jillo: person.jillo,
+                  state: person.state,
+                  country: person.country,
                     pincode: person.pincode,
                     mobileNo: person.mobileNo,
                     mobileMasked: person.mobileMasked,
@@ -60,6 +69,8 @@ export default async function NewVisitPage({ searchParams }) {
                 gam: t("gam"),
                 taluko: t("taluko"),
                 jillo: t("jillo"),
+              state: t("state"),
+              country: t("country"),
                 pincode: t("pincode"),
                 mobileNo: t("mobileNo"),
                 hardDiskName: t("hardDiskName"),

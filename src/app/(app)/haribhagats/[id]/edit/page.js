@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/dal";
 import { can } from "@/lib/permissions";
 import { t } from "@/lib/labels";
+import { listCountries } from "@/lib/services/countries";
 import { getHaribhagat } from "@/lib/services/haribhagats";
 import { Card, CardBody, PageHeader } from "@/components/ui/card";
 import { HaribhagatForm } from "@/components/haribhagat-form";
@@ -15,6 +16,7 @@ export default async function EditHaribhagatPage({ params }) {
   if (!can(user, "haribhagat.write")) redirect(`/haribhagats/${id}`);
   const person = await getHaribhagat(user, id);
   if (!person) notFound();
+  const countries = await listCountries();
 
   return (
     <>
@@ -23,6 +25,7 @@ export default async function EditHaribhagatPage({ params }) {
         <CardBody>
           <HaribhagatForm
             person={person}
+            countries={countries}
             labels={{
               name: t("name"),
               fatherName: t("fatherName"),
@@ -30,6 +33,8 @@ export default async function EditHaribhagatPage({ params }) {
               gam: t("gam"),
               taluko: t("taluko"),
               jillo: t("jillo"),
+              state: t("state"),
+              country: t("country"),
               pincode: t("pincode"),
               mobileNo: t("mobileNo"),
               save: t("save"),

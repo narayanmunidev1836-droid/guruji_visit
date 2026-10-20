@@ -12,5 +12,5 @@ export function personName(p) {
 }
 
 export function personPlace(p) {
-  return [p.gam, p.taluko, p.jillo].filter(Boolean).join(", ");
+  return [p.gam, p.taluko, p.jillo, p.state, p.country].filter(Boolean).join(", ");
 }

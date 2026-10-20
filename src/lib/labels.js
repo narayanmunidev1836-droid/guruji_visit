@@ -24,6 +24,8 @@ const DICTIONARY = {
   gam: "Village",
   taluko: "Taluko",
   jillo: "District",
+  state: "State",
+  country: "Country",
   pincode: "Pincode",
   mobileNo: "Mobile No",
 

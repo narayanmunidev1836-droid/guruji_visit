@@ -31,7 +31,7 @@ export function VisitForm(props) {
   );
 }
 
-function VisitFormFields({ visit, events, disks, placeTypes, selectedPeople, initialPerson, canSeeMobile = true, labels, onNewEntry }) {
+function VisitFormFields({ visit, events, disks, placeTypes, selectedPeople, initialPerson, canSeeMobile = true, countries, labels, onNewEntry }) {
   const editing = Boolean(visit);
   const action = editing ? updateVisitAction : createVisitAction;
   return (
@@ -39,7 +39,7 @@ function VisitFormFields({ visit, events, disks, placeTypes, selectedPeople, ini
       {editing && <input type="hidden" name="id" value={visit.id} />}
       {!editing && <SavedEntryDialog onClose={onNewEntry} />}
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {editing ? (
           <HaribhagatPicker
             initial={selectedPeople}
@@ -48,7 +48,7 @@ function VisitFormFields({ visit, events, disks, placeTypes, selectedPeople, ini
             newPersonLabel="Add a new Haribhagat"
           />
         ) : (
-          <VisitPersonFields initialPerson={initialPerson ?? null} canSeeMobile={canSeeMobile} labels={{ ...labels, haribhagats: `1. ${labels.haribhagats}` }} />
+          <VisitPersonFields initialPerson={initialPerson ?? null} canSeeMobile={canSeeMobile} countries={countries} labels={{ ...labels, haribhagats: `1. ${labels.haribhagats}` }} />
         )}
 
         <div className="grid gap-x-3 gap-y-3 sm:grid-cols-3">
@@ -89,11 +89,11 @@ function VisitFormFields({ visit, events, disks, placeTypes, selectedPeople, ini
         </div>
 
         <Field label={labels.notes} name="notes">
-          <Textarea name="notes" rows={2} defaultValue={visit?.notes ?? ""} maxLength={1000} />
+          <Textarea name="notes" rows={1} placeholder="Anything worth remembering (optional)" defaultValue={visit?.notes ?? ""} maxLength={1000} />
         </Field>
       </div>
 
-      <FormActions className="mt-4 justify-end">
+      <FormActions className="mt-3 justify-end">
         <Link href={editing ? `/visits/${visit.id}` : "/search"} className={buttonClasses({ variant: "secondary" })}>
           {labels.cancel}
         </Link>

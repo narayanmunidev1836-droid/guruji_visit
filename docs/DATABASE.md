@@ -20,7 +20,7 @@ Visit >──< Haribhagat   via VisitHaribhagat(visitId, haribhagatId, isPrimary
 Never deleted — deactivate (`isActive=false`). A session stops working as soon as the user is inactive or the password changes.
 
 ### Haribhagat (person)
-`id, name, fatherName?, surname, gam? (village), taluko?, jillo? (district), pincode? (string), mobileNo? (string), dupKey, createdById?, timestamps`.
+`id, name, fatherName?, surname, gam? (village), taluko?, jillo? (district), state?, country?, pincode? (string), mobileNo? (string), dupKey, createdById?, timestamps`.
 * `name` + `surname` required; everything else optional (real data is incomplete). Text is trimmed/whitespace-collapsed/NFC-normalised.
 * `pincode` (6 digits) and `mobileNo` (exactly 10 digits, starting 6-9) are **strings** (leading zeros preserved).
 * `dupKey` = lower-cased `name|father|surname|gam`; used **only to warn** about possible duplicates (also compares name+surname[+father] case-insensitively and the mobile number). Never merges.

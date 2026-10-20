@@ -66,6 +66,8 @@ export default async function HaribhagatPage({ params }) {
               <Row label={t("gam")}>{person.gam}</Row>
               <Row label={t("taluko")}>{person.taluko}</Row>
               <Row label={t("jillo")}>{person.jillo}</Row>
+              <Row label={t("state")}>{person.state}</Row>
+              <Row label={t("country")}>{person.country}</Row>
               <Row label={t("pincode")}>{person.pincode && <span className="font-mono">{person.pincode}</span>}</Row>
               <Row label={t("mobileNo")}>
                 {person.mobileNo && <span className="font-mono">{person.mobileNo}</span>}

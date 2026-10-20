@@ -63,6 +63,8 @@ model Haribhagat {
   gam        String? // village
   taluko     String? // taluka
   jillo      String? // district
+  state      String?
+  country    String?
   pincode    String? // string: never numeric, keeps leading zeros
   mobileNo   String? // string: never numeric
   // Normalized "name|father|surname|gam" used only to warn about possible duplicates.

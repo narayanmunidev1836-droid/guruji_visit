@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 import { saveHaribhagatAction } from "@/actions/haribhagats";
@@ -7,6 +8,10 @@ import { ActionForm, Field, FormActions, SubmitButton, useFormState } from "@/co
 import { buttonClasses } from "@/components/ui/button";
 import { MobileInput } from "@/components/ui/mobile-input";
 import { Input } from "@/components/ui/inputs";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { countryOptions, DEFAULT_COUNTRY, DEFAULT_STATE } from "@/lib/countries";
+import { SuggestInput } from "@/components/ui/suggest-input";
+import { StateSelect } from "@/components/state-select";
 
 function DuplicateWarning() {
   const { state } = useFormState();
@@ -43,13 +48,30 @@ function DuplicateWarning() {
   );
 }
 
-/** Create / edit form for a Haribhagat. Pass `person` to edit. */
-export function HaribhagatForm({ person, labels, returnTo }) {
+/** Closes the dialog once the server says the Haribhagat was saved (dialog mode only). */
+function CloseWhenSaved({ onDone }) {
+  const { state } = useFormState();
+  useEffect(() => {
+    if (state?.ok && state.saved) onDone?.();
+  }, [state, onDone]);
+  return null;
+}
+
+/**
+ * Create / edit form for a Haribhagat. Pass `person` to edit. `modal` is for the dialog on the Haribhagats list: it stays on the
+ * page, calls `onDone` after saving and `onCancel` for Cancel (instead of redirecting / linking away).
+ */
+export function HaribhagatForm({ person, labels, returnTo, countries = [], modal = false, onDone, onCancel }) {
   const v = person ?? {};
+  // The state list follows the chosen country, so both are controlled here. A new person starts as India / Gujarat.
+  const [country, setCountry] = useState(v.country ?? (person ? "" : DEFAULT_COUNTRY));
+  const [state, setState] = useState(v.state ?? (person ? "" : DEFAULT_STATE));
   return (
     <ActionForm action={saveHaribhagatAction}>
       {person && <input type="hidden" name="id" value={person.id} />}
       {returnTo && <input type="hidden" name="returnTo" value={returnTo} />}
+      {modal && <input type="hidden" name="modal" value="1" />}
+      {modal && <CloseWhenSaved onDone={onDone} />}
       <DuplicateWarning />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label={labels.name} name="name" required>
@@ -62,13 +84,32 @@ export function HaribhagatForm({ person, labels, returnTo }) {
           <Input name="surname" defaultValue={v.surname ?? ""} required maxLength={100} autoComplete="off" />
         </Field>
         <Field label={labels.gam} name="gam">
-          <Input name="gam" defaultValue={v.gam ?? ""} maxLength={100} autoComplete="off" />
+          <SuggestInput name="gam" field="gam" defaultValue={v.gam ?? ""} maxLength={100} />
         </Field>
         <Field label={labels.taluko} name="taluko">
-          <Input name="taluko" defaultValue={v.taluko ?? ""} maxLength={100} autoComplete="off" />
+          <SuggestInput name="taluko" field="taluko" defaultValue={v.taluko ?? ""} maxLength={100} />
         </Field>
         <Field label={labels.jillo} name="jillo">
-          <Input name="jillo" defaultValue={v.jillo ?? ""} maxLength={100} autoComplete="off" />
+          <SuggestInput name="jillo" field="jillo" defaultValue={v.jillo ?? ""} maxLength={100} />
+        </Field>
+        <Field label={labels.state} name="state">
+          <StateSelect country={country} countries={countries} value={state} onChange={setState} />
+        </Field>
+        <Field label={labels.country} name="country">
+          {countries.length > 0 ? (
+            <SearchableSelect
+              name="country"
+              value={country}
+              onChange={(next) => {
+                setCountry(next);
+                setState(next === DEFAULT_COUNTRY ? DEFAULT_STATE : "");
+              }}
+              placeholder="Search or select a country"
+              options={countryOptions(countries, country)}
+            />
+          ) : (
+            <SuggestInput name="country" field="country" defaultValue={v.country ?? (person ? "" : DEFAULT_COUNTRY)} maxLength={100} />
+          )}
         </Field>
         <Field label={labels.pincode} name="pincode" hint="6 digits">
           <Input name="pincode" defaultValue={v.pincode ?? ""} inputMode="numeric" maxLength={6} autoComplete="off" />
@@ -84,12 +125,22 @@ export function HaribhagatForm({ person, labels, returnTo }) {
           </Field>
         )}
       </div>
-      <FormActions>
-        <SubmitButton>{labels.save}</SubmitButton>
-        <Link href={person ? `/haribhagats/${person.id}` : "/haribhagats"} className={buttonClasses({ variant: "secondary" })}>
-          {labels.cancel}
-        </Link>
-      </FormActions>
+      {modal ? (
+        // In the dialog: Cancel then Save, on the right.
+        <FormActions className="justify-end">
+          <button type="button" onClick={onCancel} className={buttonClasses({ variant: "secondary" })}>
+            {labels.cancel}
+          </button>
+          <SubmitButton>{labels.save}</SubmitButton>
+        </FormActions>
+      ) : (
+        <FormActions>
+          <SubmitButton>{labels.save}</SubmitButton>
+          <Link href={person ? `/haribhagats/${person.id}` : "/haribhagats"} className={buttonClasses({ variant: "secondary" })}>
+            {labels.cancel}
+          </Link>
+        </FormActions>
+      )}
     </ActionForm>
   );
 }

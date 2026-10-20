@@ -16,6 +16,8 @@ export const haribhagatSchema = z.object({
   gam: optionalText(100),
   taluko: optionalText(100),
   jillo: optionalText(100),
+  state: optionalText(100),
+  country: optionalText(100),
   pincode: pincodeField,
   mobileNo: mobileField,
 });
@@ -105,6 +107,22 @@ export async function updateHaribhagat(actor, id, input, { confirmDuplicate = fa
   return ok({ person });
 }
 
+/**
+ * Deletes a Haribhagat. Refused while any entry (visit) still lists them, because those entries would lose their person:
+ * delete or edit the entries first.
+ */
+export async function deleteHaribhagat(actor, id) {
+  const person = await db.haribhagat.findUnique({ where: { id }, include: { _count: { select: { visits: true } } } });
+  if (!person) return fail("Haribhagat not found.");
+  const count = person._count.visits;
+  if (count > 0) {
+    return fail(`${person.name} ${person.surname} is used in ${count} ${count === 1 ? "entry" : "entries"}. Delete or change those entries first.`);
+  }
+  await db.haribhagat.delete({ where: { id } });
+  await audit(actor, "haribhagat.delete", "Haribhagat", id, { name: `${person.name} ${person.surname}` });
+  return ok();
+}
+
 /** Paginated directory search. `filters` come from the URL; mobile numbers are masked for unauthorized roles. */
 export async function searchHaribhagats(user, filters, page = 1) {
   const { mobileVisibleRoles } = getEnv();
@@ -165,6 +183,31 @@ export async function pickerSearch(query, { limit = 10, allowMobile = false } = 
     select: { id: true, name: true, fatherName: true, surname: true, gam: true, jillo: true, mobileNo: true },
   });
   return rows.map((row) => ({ ...row, mobileNo: allowMobile ? row.mobileNo : undefined }));
+}
+
+const PLACE_FIELDS = ["gam", "taluko", "jillo", "state", "country"];
+
+/**
+ * Suggestions for the village / taluko / district / state / country boxes: the values already used by saved Haribhagats, most used first.
+ * `context` narrows them to people whose other place fields contain the given text (a taluko box typed after the district).
+ */
+export async function suggestPlaces(field, query, context = {}, limit = 8) {
+  if (!PLACE_FIELDS.includes(field)) return [];
+  const and = [{ [field]: { not: null } }];
+  const text = String(query ?? "").trim().slice(0, 100);
+  if (text) and.push({ [field]: { contains: text, mode: "insensitive" } });
+  for (const other of PLACE_FIELDS) {
+    const value = other === field ? "" : String(context?.[other] ?? "").trim().slice(0, 100);
+    if (value) and.push({ [other]: { contains: value, mode: "insensitive" } });
+  }
+  const rows = await db.haribhagat.groupBy({
+    by: [field],
+    where: { AND: and },
+    _count: { id: true },
+    orderBy: [{ _count: { id: "desc" } }, { [field]: "asc" }],
+    take: limit,
+  });
+  return rows.map((row) => row[field]).filter((value) => value && value.trim() !== "");
 }
 
 export async function getHaribhagatsByIds(ids) {
