@@ -6,7 +6,7 @@ The plan said: *if a decision is not yet known, document a safe default and keep
 
 | # | Question | Default implemented | Where to change |
 |---|---|---|---|
-| 1 | UI labels: Gujarati, English or bilingual? | **Bilingual** ("Name / નામ"). Gujarati/English text is accepted and searchable everywhere. | `NEXT_PUBLIC_UI_LANGUAGE=en\|gu\|bilingual` (build time); add/edit words in `src/lib/labels.js` (have a Gujarati speaker review the translations) |
+| 1 | UI labels: Gujarati, English or bilingual? | **English only** (changed 2026-10-20). Gujarati text typed as data (names, villages) is still accepted and searchable. | add/edit words in `src/lib/labels.js` |
 | 2 | One visit with several Haribhagats and many photographs? | **Yes.** `Visit` ⇢ many `VisitHaribhagat` (one primary) and many `Photo`. | `prisma/schema.prisma` |
 | 3 | Indexing computer: Windows, macOS or both? | **Both** (and Linux): drive discovery per OS; paths normalised to `/`. Tested on Windows. | `indexer/lib/drives.mjs` |
 | 4 | Open originals remotely, or is "which disk + path" enough for v1? | v1 = **identify disk and path** everywhere; **opening** works on the staff computer that runs the agent (`127.0.0.1`). Remote opening is a later option. | see §C |

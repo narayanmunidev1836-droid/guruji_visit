@@ -50,7 +50,7 @@ sudo -u guruji env SEED_ADMIN_EMAIL=admin@yourorg.org SEED_ADMIN_PASSWORD='long-
 sudo -u guruji npm run build
 ```
 `LOCAL_AGENT_URL` stays `http://127.0.0.1:4599` — it is the address **on the staff computer**, not the server.
-`NEXT_PUBLIC_UI_LANGUAGE` is read at **build** time; rebuild after changing it. The build downloads Google Fonts (Geist, Noto Sans Gujarati), so the VPS needs outbound internet during `npm run build`.
+The build downloads Google Fonts (Geist, Noto Sans Gujarati), so the VPS needs outbound internet during `npm run build`.
 
 ### systemd service `/etc/systemd/system/guruji.service`
 ```ini

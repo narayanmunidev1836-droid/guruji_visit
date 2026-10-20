@@ -101,7 +101,7 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels }
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {person && <input type="hidden" name="haribhagatIds" value={person.id} />}
 
       <div>
@@ -154,7 +154,7 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels }
         <p className="text-xs text-muted">Not in the list? Fill in the details below - a new Haribhagat is saved together with this visit.</p>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-x-3 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
         <Field label={labels.surname} name="surname" required={!locked}>
           <Input name="surname" maxLength={100} {...bind("surname")} />
         </Field>
@@ -165,8 +165,8 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels }
           <Input name="fatherName" maxLength={100} {...bind("fatherName")} />
         </Field>
         {canSeeMobile && (
-          <Field label={labels.mobileNo} name="mobileNo" hint={locked ? undefined : "10 digit mobile number"}>
-            <Input name="mobileNo" inputMode="tel" maxLength={20} {...bind("mobileNo")} />
+          <Field label={labels.mobileNo} name="mobileNo">
+            <Input name="mobileNo" inputMode="tel" maxLength={20} placeholder={locked ? undefined : "10 digits"} {...bind("mobileNo")} />
           </Field>
         )}
         <Field label={labels.gam} name="gam">
@@ -178,8 +178,8 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels }
         <Field label={labels.jillo} name="jillo">
           <Input name="jillo" maxLength={100} {...bind("jillo")} />
         </Field>
-        <Field label={labels.pincode} name="pincode" hint={locked ? undefined : "6 digits"}>
-          <Input name="pincode" inputMode="numeric" maxLength={6} {...bind("pincode")} />
+        <Field label={labels.pincode} name="pincode">
+          <Input name="pincode" inputMode="numeric" maxLength={6} placeholder={locked ? undefined : "6 digits"} {...bind("pincode")} />
         </Field>
       </div>
 

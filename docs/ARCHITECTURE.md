@@ -151,6 +151,5 @@ docs/                                                you are here
 
 ## 11. Internationalisation
 
-Labels are bilingual by default ("Name / નામ"). `NEXT_PUBLIC_UI_LANGUAGE` = `bilingual | en | gu` (build time). Add keys in `src/lib/labels.js`; use `t(key)` (string), `tPair(key)` (primary/secondary),
-`tEn/tGu`. Data (names, villages) is stored in whatever script users type (NFC-normalised); search is `ILIKE` so Gujarati and English both work.
+UI labels are English only. Add keys in `src/lib/labels.js`; use `t(key)`. Data (names, villages) is stored in whatever script users type (NFC-normalised); search is `ILIKE` so Gujarati and English both work.
 Fonts: Geist (Latin) + Noto Sans Gujarati (via `next/font/google`, downloaded at build time).

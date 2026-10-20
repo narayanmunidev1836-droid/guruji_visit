@@ -6,6 +6,7 @@ import { t } from "@/lib/labels";
 import { formatDate } from "@/lib/format";
 import { listVisits } from "@/lib/services/visits";
 import { personName } from "@/lib/ui-labels";
+import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, EmptyState, PageHeader } from "@/components/ui/card";
@@ -35,6 +36,11 @@ export default async function VisitsPage({ searchParams }) {
           )
         }
       />
+      {raw.saved && (
+        <Alert tone="success" className="mb-6">
+          Visit saved.
+        </Alert>
+      )}
       {result.items.length === 0 ? (
         <EmptyState title="No visits yet" description="Create a visit to record which hard disk and folder hold a Haribhagat's photos." />
       ) : (

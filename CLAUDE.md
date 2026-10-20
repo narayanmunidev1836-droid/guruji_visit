@@ -42,13 +42,13 @@ zod, audit log; return `{ok, …}` / `{ok:false, error, fieldErrors}`) → Prism
 | DB schema / migrations / seed | `prisma/schema.prisma`, `prisma/migrations/`, `prisma/seed.mjs` |
 | Env validation (all config) | `src/lib/env.js` (+ `.env.example`) |
 | Login session, roles | `src/lib/auth/{session,jwt,password,dal}.js`, `src/lib/permissions.js`, `src/proxy.js`, `src/actions/auth.js` |
-| Visits (Haribhagat + disk + folder; event/date/place/notes optional) | `src/lib/services/visits.js`, `src/actions/visits.js`, form `src/components/visit-form.jsx`, page `src/app/(app)/visits/new/page.js` |
+| Visits (Haribhagat + disk + folder + event, date and place required; notes optional) | `src/lib/services/visits.js`, `src/actions/visits.js`, form `src/components/visit-form.jsx`, page `src/app/(app)/visits/new/page.js` |
 | "New visit" Haribhagat inputs (search → fills surname/name/father/mobile/…; or type a new one) | `src/components/visit-person-fields.jsx`; server creates the Haribhagat with the visit (`createVisit`) |
 | Search visits by Haribhagat (filters, pagination) | `src/lib/services/search.js`, `person-filters.js`, page `src/app/(app)/search/page.js`, card `src/components/visit-card.jsx` |
 | People / events / disks | `src/lib/services/{haribhagats,events,disks}.js` |
 | Folder path rule | `src/lib/paths.js` (relative to the disk root, `/` separators); `parseVisitFolder` in `visits.js` drops a pasted drive letter (`F:\A\B` → `A/B`) |
 | Text/phone/pincode normalisation | `src/lib/normalize.js`, `src/lib/validation.js` |
-| UI labels (Gujarati/English) | `src/lib/labels.js` (`t(key)`; `NEXT_PUBLIC_UI_LANGUAGE`); the **sidebar is English only** |
+| UI labels (**English only** - no Gujarati text in the UI) | `src/lib/labels.js` (`t(key)`); Gujarati is still accepted/searchable in typed data (names, villages) |
 | UI building blocks | `src/components/ui/*`, forms: `ui/form.jsx` (`ActionForm`, `Field`, `SubmitButton`) |
 | Theme (colours, gradients, radii) | `src/app/globals.css` tokens — **same design as the Book Knowledge app** (repo `D:\book-knowledge`, https://bk.ssgd.org/sant): terracotta `#c4511f → #8e1f0a`, off-white `#fdfaf8`, slate neutrals, **light only (no dark mode)**. Use `bg-brand` / `shadow-brand` / `shadow-card` / `fade-up` / `card-hover` utilities; never hard-code hex where a token exists. If `next dev` serves stale CSS after editing `globals.css`, change real content (a `touch` is not enough) or restart. |
 | App shell / nav | `src/components/app-shell.jsx` (server), `app-frame.jsx` (client; desktop sidebar, phone top bar + bottom tabs with More menu) |
@@ -70,7 +70,7 @@ zod, audit log; return `{ok, …}` / `{ok:false, error, fieldErrors}`) → Prism
   Route handlers that read no request data need `await connection()`; catch blocks must `unstable_rethrow(error)`.
 * **zod 4**: `z.any()` rejects a *missing* key ("nonoptional") → use `z.preprocess(v => v ?? "", z.string()…)` (see `validation.js`).
 * **Prisma 7**: relation `orderBy` has no `nulls` option (scalar nullable fields such as `Visit.visitDate` do: `{ sort, nulls: "last" }`); never spread two `OR`s into one `where` (use `AND:[{OR},{OR}]`).
-* Dates: `Visit.visitDate` is an optional DATE (UTC midnight) — always format with `src/lib/format.js` (UTC).
+* Dates: `Visit.visitDate` is a DATE (required in the form/service; the column is still nullable for old rows) (UTC midnight) — always format with `src/lib/format.js` (UTC).
 * Mobile numbers/pincodes are **strings**. Roles without mobile access get masked numbers and **cannot search by mobile** (filter then matches nobody).
 * Duplicate Haribhagats: warn (same normalised name+father+surname+gam, or same mobile), never auto-merge.
 * Events/disks/users are **deactivated, never deleted**. Dropdown sources: `listActiveEvents`, `listActiveDisks` (+ `…ForSelect` to keep an inactive current value). Never hardcode options.

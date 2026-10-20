@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { fail, ok, validate } from "@/lib/result";
 import { parseDateInput } from "@/lib/format";
 import { normalizeFolderPath, InvalidPathError } from "@/lib/paths";
-import { idField, optionalIdField, optionalPlaceType, optionalText } from "@/lib/validation";
+import { idField, optionalIdField, optionalText, PLACE_TYPES } from "@/lib/validation";
 import { makeDupKey } from "@/lib/normalize";
 import { audit } from "@/lib/services/audit";
 import { findPossibleDuplicates, haribhagatSchema } from "@/lib/services/haribhagats";
@@ -19,13 +19,13 @@ const idList = z.preprocess(
     .max(MAX_PEOPLE, `At most ${MAX_PEOPLE} Haribhagats per visit.`),
 );
 
-/** Optional date: empty -> null, invalid -> error. */
-const optionalDate = z.preprocess(
+/** Required date: empty or invalid -> error. */
+const requiredDate = z.preprocess(
   (v) => (v === undefined || v === null ? "" : String(v)),
   z.string().transform((value, ctx) => {
     const date = parseDateInput(value);
-    if (date === undefined) {
-      ctx.addIssue({ code: "custom", message: "Enter a valid date." });
+    if (date === undefined || date === null) {
+      ctx.addIssue({ code: "custom", message: value.trim() === "" ? "Date is required." : "Enter a valid date." });
       return z.NEVER;
     }
     return date;
@@ -36,9 +36,9 @@ const visitFields = {
   primaryHaribhagatId: optionalIdField,
   hardDiskId: idField("Hard disk"),
   folderPath: z.any().optional(),
-  eventId: optionalIdField,
-  visitDate: optionalDate,
-  placeType: optionalPlaceType,
+  eventId: idField("Event"),
+  visitDate: requiredDate,
+  placeType: z.enum(PLACE_TYPES, { error: "Place is required." }),
   notes: optionalText(1000),
 };
 

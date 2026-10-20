@@ -42,7 +42,7 @@ cd indexer && npm install   # only on the computer that will run the indexer / f
 cp .env.example .env
 ```
 Edit `.env` (all variables are documented in the file; validated by `src/lib/env.js`):
-`DATABASE_URL`, `SESSION_SECRET` (≥32 random chars: `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`), optional `THUMBNAIL_DIR`, `MOBILE_VISIBLE_ROLES`, `HEARTBEAT_TTL_SECONDS`, `LOCAL_AGENT_URL`, `NEXT_PUBLIC_UI_LANGUAGE`.
+`DATABASE_URL`, `SESSION_SECRET` (≥32 random chars: `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`), optional `THUMBNAIL_DIR`, `MOBILE_VISIBLE_ROLES`, `HEARTBEAT_TTL_SECONDS`, `LOCAL_AGENT_URL`.
 `.env` is git-ignored — never commit it.
 **Hosted DB (e.g. Supabase):** use the transaction-mode pooler (port 6543, `?pgbouncer=true`) as `DATABASE_URL` for the app and the session-mode/direct URL (port 5432) as `DIRECT_URL` — the Prisma CLI (`prisma.config.js`) prefers `DIRECT_URL`, because migrations do not work through a transaction pooler. Special characters in the password must be URL-encoded (`@` → `%40`).
 

@@ -26,7 +26,7 @@ export async function createVisitAction(_prev, formData) {
     revalidatePath("/search");
     revalidatePath("/visits");
     revalidatePath("/dashboard");
-    redirect(`/visits/${result.visit.id}?saved=1`);
+    redirect("/visits?saved=1");
   });
 }
 

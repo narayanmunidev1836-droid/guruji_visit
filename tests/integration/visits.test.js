@@ -8,6 +8,7 @@ describe.skipIf(!HAS_DB)("visits (Haribhagat + hard disk + folder)", () => {
   let disk;
   let ramesh;
   let suresh;
+  let event;
 
   beforeAll(async () => {
     db = await getDb();
@@ -20,18 +21,27 @@ describe.skipIf(!HAS_DB)("visits (Haribhagat + hard disk + folder)", () => {
     disk = await makeDisk(db, "HDD-001");
     ramesh = await makePerson(db);
     suresh = await makePerson(db, { name: "Suresh", surname: "Shah", fatherName: "Mohan", gam: "Surat" });
+    event = await makeEvent(db, "Pathramani");
   });
 
-  const base = (extra = {}) => ({ haribhagatIds: [String(ramesh.id)], hardDiskId: String(disk.id), folderPath: "MUKT SWAMI DATA/decstop", ...extra });
+  const base = (extra = {}) => ({
+    haribhagatIds: [String(ramesh.id)],
+    hardDiskId: String(disk.id),
+    folderPath: "MUKT SWAMI DATA/decstop",
+    eventId: String(event.id),
+    visitDate: "2019-03-14",
+    placeType: "HOME",
+    ...extra,
+  });
 
-  it("creates a visit with only a Haribhagat, a disk and a folder", async () => {
+  it("creates a visit with a Haribhagat, a disk, a folder, an event, a date and a place", async () => {
     const result = await svc.createVisit(staff, base());
     expect(result.ok).toBe(true);
     const visit = await svc.getVisit(result.visit.id);
     expect(visit.hardDisk.labelName).toBe("HDD-001");
     expect(visit.folderPath).toBe("MUKT SWAMI DATA/decstop");
-    expect(visit.eventId).toBeNull();
-    expect(visit.visitDate).toBeNull();
+    expect(visit.eventId).toBe(event.id);
+    expect(visit.visitDate.toISOString().slice(0, 10)).toBe("2019-03-14");
     expect(visit.haribhagats.map((l) => [l.haribhagatId, l.isPrimary])).toEqual([[ramesh.id, true]]);
     expect(visit.createdBy.name).toBe(staff.name);
   });
@@ -58,16 +68,21 @@ describe.skipIf(!HAS_DB)("visits (Haribhagat + hard disk + folder)", () => {
     expect(await db.visit.count()).toBe(0);
   });
 
-  it("stores optional event, date, place and several people with a primary person", async () => {
-    const event = await makeEvent(db, "Pathramani");
+  it("requires event, date and place, but not notes", async () => {
+    for (const key of ["eventId", "visitDate", "placeType"]) {
+      const result = await svc.createVisit(staff, base({ [key]: "" }));
+      expect(result.ok).toBe(false);
+      expect(result.fieldErrors[key]).toBeTruthy();
+    }
+    expect((await svc.createVisit(staff, base({ notes: "" }))).ok).toBe(true);
+  });
+
+  it("stores event, date, place, notes and several people with a primary person", async () => {
     const result = await svc.createVisit(
       staff,
       base({
         haribhagatIds: [String(ramesh.id), String(suresh.id)],
         primaryHaribhagatId: String(suresh.id),
-        eventId: String(event.id),
-        visitDate: "2019-03-14",
-        placeType: "HOME",
         notes: "At home",
       }),
     );
@@ -80,8 +95,8 @@ describe.skipIf(!HAS_DB)("visits (Haribhagat + hard disk + folder)", () => {
   });
 
   it("only allows ACTIVE events for new visits", async () => {
-    const event = await makeEvent(db, "Old", { isActive: false });
-    const result = await svc.createVisit(staff, base({ eventId: String(event.id) }));
+    const old = await makeEvent(db, "Old", { isActive: false });
+    const result = await svc.createVisit(staff, base({ eventId: String(old.id) }));
     expect(result.ok).toBe(false);
     expect(result.fieldErrors.eventId).toBeTruthy();
   });
@@ -99,13 +114,13 @@ describe.skipIf(!HAS_DB)("visits (Haribhagat + hard disk + folder)", () => {
     expect((await svc.updateVisit(staff, created.id, base({ hardDiskId: String(other.id) }))).ok).toBe(false);
   });
 
-  it("lists visits newest first (undated last) with their disk and people", async () => {
+  it("lists visits newest first with their disk and people", async () => {
     await svc.createVisit(staff, base({ visitDate: "2019-03-14", folderPath: "old" }));
     await svc.createVisit(staff, base({ haribhagatIds: [String(suresh.id)], visitDate: "2020-01-01", folderPath: "new" }));
-    await svc.createVisit(staff, base({ folderPath: "undated" }));
+    await svc.createVisit(staff, base({ visitDate: "2018-05-05", folderPath: "oldest" }));
     const list = await svc.listVisits({});
     expect(list.total).toBe(3);
-    expect(list.items.map((v) => v.folderPath)).toEqual(["new", "old", "undated"]);
+    expect(list.items.map((v) => v.folderPath)).toEqual(["new", "old", "oldest"]);
     expect(list.items[0].hardDisk.labelName).toBe("HDD-001");
     expect((await svc.listVisits({ hardDiskId: disk.id })).total).toBe(3);
   });

@@ -27,15 +27,9 @@ export default async function NewVisitPage({ searchParams }) {
 
   return (
     <>
-      <PageHeader
-        backHref="/visits"
-        backLabel={t("visits")}
-        title="New visit"
-        description="Search or enter the Haribhagat, then choose the hard disk and the folder where the photos of this visit are kept."
-      />
 
-      <Card className="max-w-4xl">
-        <CardBody>
+      <Card className="max-w-6xl">
+        <CardBody className="p-4 sm:p-5">
           <VisitForm
             events={events}
             disks={disks}
@@ -43,17 +37,17 @@ export default async function NewVisitPage({ searchParams }) {
             initialPerson={
               person
                 ? {
-                    id: person.id,
-                    name: person.name,
-                    fatherName: person.fatherName,
-                    surname: person.surname,
-                    gam: person.gam,
-                    taluko: person.taluko,
-                    jillo: person.jillo,
-                    pincode: person.pincode,
-                    mobileNo: person.mobileNo,
-                    mobileMasked: person.mobileMasked,
-                  }
+                  id: person.id,
+                  name: person.name,
+                  fatherName: person.fatherName,
+                  surname: person.surname,
+                  gam: person.gam,
+                  taluko: person.taluko,
+                  jillo: person.jillo,
+                  pincode: person.pincode,
+                  mobileNo: person.mobileNo,
+                  mobileMasked: person.mobileMasked,
+                }
                 : null
             }
             canSeeMobile={canViewMobile(user, getEnv().mobileVisibleRoles)}

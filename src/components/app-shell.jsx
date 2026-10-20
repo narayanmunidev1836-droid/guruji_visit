@@ -1,13 +1,12 @@
 import { logoutAction } from "@/actions/auth";
 import { requireUser } from "@/lib/auth/dal";
 import { isAdmin } from "@/lib/permissions";
-import { tPair } from "@/lib/labels";
+import { t } from "@/lib/labels";
 import { AppFrame } from "@/components/app-frame";
 
 function buildNav(user) {
   const item = (href, icon, key, match) => {
-    const [primary] = tPair(key); // sidebar is English only (no Gujarati secondary line)
-    return { href, icon, primary, match };
+    return { href, icon, primary: t(key), match };
   };
   const nav = [
     item("/dashboard", "LayoutDashboard", "dashboard", "exact"),
@@ -31,7 +30,7 @@ export async function AppShell({ children }) {
     <AppFrame
       nav={buildNav(user)}
       user={{ name: user.name, roleLabel: user.role === "ADMIN" ? "Admin" : "Staff" }}
-      labels={{ account: tPair("account")[0], logout: tPair("logout")[0], more: "More" }}
+      labels={{ account: t("account"), logout: t("logout"), more: "More" }}
       logoutAction={logoutAction}
     >
       {children}

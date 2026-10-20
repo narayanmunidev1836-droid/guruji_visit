@@ -3,7 +3,7 @@ import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
-// Gujarati glyphs for names, villages and bilingual labels.
+// Gujarati glyphs, only for names and villages that staff type in Gujarati (the UI itself is English).
 const notoGujarati = Noto_Sans_Gujarati({ variable: "--font-gujarati", subsets: ["gujarati", "latin"], display: "swap" });
 
 export const metadata = {

@@ -2,6 +2,7 @@ import { Search } from "lucide-react";
 import { t } from "@/lib/labels";
 import { placeTypeOptions } from "@/lib/ui-labels";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input, Label, Select } from "@/components/ui/inputs";
 
 function F({ label, children, className }) {
@@ -46,7 +47,7 @@ export function SearchForm({ values, events, disks, allowMobile }) {
       </div>
 
       <details className="mt-4 group" open={advanced}>
-        <summary className="cursor-pointer select-none text-sm font-medium text-primary">Filters / ફિલ્ટર</summary>
+        <summary className="cursor-pointer select-none text-sm font-medium text-primary">Filters</summary>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <F label={t("name")}>
             <Input name="name" defaultValue={values.name ?? ""} />
@@ -75,10 +76,10 @@ export function SearchForm({ values, events, disks, allowMobile }) {
             </F>
           )}
           <F label={t("dateFrom")}>
-            <Input name="dateFrom" type="date" defaultValue={values.dateFrom ?? ""} />
+            <DatePicker name="dateFrom" defaultValue={values.dateFrom ?? ""} />
           </F>
           <F label={t("dateTo")}>
-            <Input name="dateTo" type="date" defaultValue={values.dateTo ?? ""} />
+            <DatePicker name="dateTo" defaultValue={values.dateTo ?? ""} />
           </F>
           <F label={t("eventName")}>
             <Select name="eventId" defaultValue={values.eventId ?? ""} options={eventOptions} placeholder={t("all")} />

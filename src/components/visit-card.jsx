@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, HardDrive } from "lucide-react";
+import { CalendarDays, FolderOpen, HardDrive } from "lucide-react";
 import { t } from "@/lib/labels";
 import { formatDate } from "@/lib/format";
 import { displayLocation } from "@/lib/paths";
@@ -7,16 +7,25 @@ import { personName } from "@/lib/ui-labels";
 import { Badge } from "@/components/ui/badge";
 import { CopyButton } from "@/components/copy-button";
 
-/** "HDD-001 / MUKT SWAMI DATA/decstop" - the text staff use to find the folder (disk root when no folder). */
+/** Hard disk and folder shown separately ("HDD-001" and "MUKT SWAMI DATA/decstop"); Copy path copies "HDD-001 / folder". */
 export function VisitLocation({ visit, copy = true }) {
   if (!visit.hardDisk) return <span className="text-sm text-muted">No hard disk recorded</span>;
-  const text = visit.folderPath ? displayLocation(visit.hardDisk.labelName, visit.folderPath) : `${visit.hardDisk.labelName} (disk root)`;
+  const disk = visit.hardDisk.labelName;
+  const text = visit.folderPath ? displayLocation(disk, visit.folderPath) : `${disk} (disk root)`;
   return (
     <span className="inline-flex flex-wrap items-center gap-2">
-      <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary-soft px-2.5 py-1 text-sm font-semibold text-primary ring-1 ring-[#f0d0b8]">
+      <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary-soft px-2.5 py-1 text-sm font-semibold text-primary ring-1 ring-[#f0d0b8]" title="Hard disk">
         <HardDrive className="h-4 w-4 shrink-0" aria-hidden />
-        <span className="break-all">{text}</span>
+        <span className="break-all">{disk}</span>
       </span>
+      {visit.folderPath ? (
+        <span className="inline-flex items-center gap-1.5 rounded-lg bg-surface-muted px-2.5 py-1 text-sm font-medium text-foreground ring-1 ring-border" title="Folder">
+          <FolderOpen className="h-4 w-4 shrink-0 text-muted" aria-hidden />
+          <span className="break-all">{visit.folderPath}</span>
+        </span>
+      ) : (
+        <span className="text-sm text-muted">(disk root)</span>
+      )}
       {copy && <CopyButton text={text} label={t("copyPath")} copiedLabel={t("copied")} />}
     </span>
   );

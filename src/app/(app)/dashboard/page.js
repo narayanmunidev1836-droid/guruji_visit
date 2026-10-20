@@ -53,7 +53,7 @@ export default async function DashboardPage() {
           <Input
             name="q"
             type="search"
-            placeholder="Search a Haribhagat: name, surname, village, mobile…  /  નામ, અટક, ગામ…"
+            placeholder="Search a Haribhagat: name, surname, village, mobile…"
             className="h-12 pl-10 text-base"
             aria-label={t("search")}
           />

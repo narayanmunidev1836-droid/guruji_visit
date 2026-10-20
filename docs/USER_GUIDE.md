@@ -40,10 +40,3 @@ After a disk is indexed its photos are **not** attached to anyone (the system ne
 * Never edit or rename folders on the original disks to "fix" the archive — ask for a re-scan instead (renamed folders appear as new photos and the old ones as missing).
 
 ---
-
-## ગુજરાતીમાં ટૂંકમાં
-* **શોધ:** *Search* માં નામ, અટક, ગામ, મોબાઇલ કે ફાઇલનું નામ લખો. દરેક ફોટા પર **હાર્ડ ડિસ્કનું સ્ટીકર નામ અને ફોલ્ડર પાથ** દેખાય છે.
-* **જોડાયેલ / જોડાયેલ નથી:** જો ડિસ્ક જોડાયેલ નથી તો લખેલું આવશે — "Connect HDD-002 to access the original file". ડિસ્ક લગાવો, અડધી મિનિટ રાહ જુઓ.
-* **નવો હરિભક્ત:** *Haribhagats → Add*. નામ અને અટક જરૂરી છે. સરખો હરિભક્ત પહેલેથી હોય તો ચેતવણી આવશે — ખરેખર અલગ વ્યક્તિ હોય તો જ *Save anyway* દબાવો.
-* **સમીક્ષા બાકી (Needs review):** નવા સ્કેન થયેલા ફોટા કોઈની સાથે જોડાયેલા હોતા નથી. ફોલ્ડર પસંદ કરી *New visit* માં હરિભક્ત, કાર્યક્રમ, તારીખ અને સ્થળ પસંદ કરીને સાચવો.
-* **ડિસ્કમાં ફેરફાર ન કરો:** મૂળ ડિસ્કમાં ફોલ્ડરના નામ બદલશો નહીં કે ફાઇલ ખસેડશો નહીં; સિસ્ટમ ફોટા ક્યારેય ડિલીટ કરતી નથી.

@@ -39,7 +39,7 @@ Legend: ✅ done & tested · 🟡 done with a stated limitation · ⬜ not done 
 |---|---|
 | §5 Prisma models (User, Haribhagat, Event, HardDisk, Visit, VisitHaribhagat, Photo, ScanJob, AuditLog) + `IndexerToken` | ✅ |
 | §6 Pages: `/login /dashboard /search /photos/[id] /haribhagats /haribhagats/new /haribhagats/[id]/edit /events /hard-disks /scans /users /settings` | ✅ (+ `/review /visits /visits/new /visits/[id] /hard-disks/[id] /scans/[id] /haribhagats/[id] /account`) |
-| §6 desktop-first + compact mobile layout; Gujarati/English labels | ✅ (bilingual default) — Gujarati wording should be reviewed by a native speaker |
+| §6 desktop-first + compact mobile layout; English-only labels | ✅ (Gujarati UI text removed 2026-10-20) |
 | §7 Workflows A (register disk) · B (add event) · C (visit + photos) · D (find old photo, clear disconnected message) | ✅ E2E `workflow`, `master-data`, `search` |
 
 ### §8 Import & migration

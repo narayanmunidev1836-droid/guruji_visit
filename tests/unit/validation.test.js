@@ -40,16 +40,15 @@ describe("haribhagat validation", () => {
 });
 
 describe("visit validation", () => {
-  const valid = { haribhagatIds: ["1", "2"], hardDiskId: "4", folderPath: "MUKT SWAMI DATA/decstop" };
+  const valid = { haribhagatIds: ["1", "2"], hardDiskId: "4", folderPath: "MUKT SWAMI DATA/decstop", eventId: "3", visitDate: "2019-03-14", placeType: "HOME" };
 
-  it("coerces form strings to numbers; event and date are optional", () => {
+  it("coerces form strings to numbers; notes are optional", () => {
     const result = validate(visitSchema, valid);
     expect(result.ok).toBe(true);
     expect(result.data.hardDiskId).toBe(4);
     expect(result.data.haribhagatIds).toEqual([1, 2]);
-    expect(result.data.eventId).toBeNull();
-    expect(result.data.visitDate).toBeNull();
-    expect(result.data.placeType).toBeNull();
+    expect(result.data.eventId).toBe(3);
+    expect(result.data.placeType).toBe("HOME");
   });
 
   it("requires a Haribhagat and a hard disk", () => {
@@ -57,10 +56,15 @@ describe("visit validation", () => {
     expect(validate(visitSchema, { ...valid, hardDiskId: "" }).fieldErrors.hardDiskId).toBeTruthy();
   });
 
-  it("parses an optional visit date and rejects an impossible one", () => {
-    const ok = validate(visitSchema, { ...valid, visitDate: "2019-03-14", eventId: "3" });
+  it("requires event, date and place", () => {
+    expect(validate(visitSchema, { ...valid, eventId: "" }).fieldErrors.eventId).toBe("Event is required.");
+    expect(validate(visitSchema, { ...valid, visitDate: "" }).fieldErrors.visitDate).toBe("Date is required.");
+    expect(validate(visitSchema, { ...valid, placeType: "" }).fieldErrors.placeType).toBe("Place is required.");
+  });
+
+  it("parses the visit date and rejects an impossible one", () => {
+    const ok = validate(visitSchema, valid);
     expect(ok.data.visitDate.toISOString()).toBe("2019-03-14T00:00:00.000Z");
-    expect(ok.data.eventId).toBe(3);
     expect(validate(visitSchema, { ...valid, visitDate: "2019-02-30" }).fieldErrors.visitDate).toBe("Enter a valid date.");
   });
 
