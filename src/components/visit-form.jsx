@@ -54,6 +54,9 @@ function VisitFormFields({ visit, events, disks, placeTypes, selectedPeople, ini
         )}
 
         <div className="grid gap-x-3 gap-y-3 sm:grid-cols-3">
+          <Field label={labels.date} name="visitDate" required>
+            <DatePicker name="visitDate" required defaultValue={visit?.visitDate ?? ""} />
+          </Field>
           <Field label={labels.eventName} name="eventId" required>
             <SearchableSelect
               name="eventId"
@@ -63,9 +66,6 @@ function VisitFormFields({ visit, events, disks, placeTypes, selectedPeople, ini
               clearable={false}
               options={withRecent(events.map((e) => ({ value: e.id, label: e.isActive ? e.name : `${e.name} (inactive)` })), recentEventIds)}
             />
-          </Field>
-          <Field label={labels.date} name="visitDate" required>
-            <DatePicker name="visitDate" required defaultValue={visit?.visitDate ?? ""} />
           </Field>
           <Field label={labels.placeType} name="placeType" required>
             <SearchableSelect name="placeType" required defaultValue={visit?.placeType ?? ""} placeholder="Search or select a place" clearable={false} options={placeTypes} />

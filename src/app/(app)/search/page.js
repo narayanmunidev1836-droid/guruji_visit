@@ -41,6 +41,10 @@ export default async function SearchPage({ searchParams }) {
           <>
             {result.latest ? (
               <h2 className="mb-3 text-base font-semibold">Latest entries</h2>
+            ) : result.loose ? (
+              <p className="mb-3 rounded-lg border border-warning/40 bg-warning-soft px-3 py-2 text-sm text-warning">
+                Nothing matches exactly what you typed. Showing {result.total} visit(s) with a similar spelling (for example PATEL for PTEL).
+              </p>
             ) : (
               <p className="mb-3 text-sm text-muted">{result.total} visit(s) found</p>
             )}

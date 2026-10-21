@@ -5,6 +5,7 @@ import { AlertTriangle, Loader2, Search, UserPlus, X } from "lucide-react";
 import { haribhagatDetailsAction, pickerSearchAction } from "@/actions/haribhagats";
 import { Field, SubmitButton, useFormState } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { DebounceInput } from "@/components/ui/debounce-input";
 import { MobileInput } from "@/components/ui/mobile-input";
@@ -22,13 +23,138 @@ function toValues(person) {
   return Object.fromEntries(FIELDS.map((key) => [key, person?.[key] ?? ""]));
 }
 
-/** What was typed in the search box, split into name / father name / surname ("Ramesh Kanji Patel"). Staff can correct it. */
+/**
+ * What was typed in the search box, split into name / father name / surname ("Ramesh Kanji Patel"); a 10-digit number is the
+ * mobile and a 6-digit number the pincode. Staff can correct it.
+ */
 function guessNewPerson(text) {
-  const words = text.trim().split(/s+/).filter(Boolean);
-  if (words.length === 0) return {};
-  if (words.length === 1) return { name: words[0] };
-  if (words.length === 2) return { name: words[0], surname: words[1] };
-  return { name: words[0], fatherName: words.slice(1, -1).join(" "), surname: words[words.length - 1] };
+  const guess = {};
+  const words = [];
+  for (const word of text.trim().split(/\s+/).filter(Boolean)) {
+    const digits = word.replace(/\D/g, "");
+    if (digits.length === 10 && /^[6-9]/.test(digits) && !guess.mobileNo) guess.mobileNo = digits;
+    else if (digits.length === 6 && digits === word && !guess.pincode) guess.pincode = digits;
+    else words.push(word);
+  }
+  if (words.length === 1) guess.name = words[0];
+  else if (words.length === 2) Object.assign(guess, { name: words[0], surname: words[1] });
+  else if (words.length > 2) Object.assign(guess, { name: words[0], fatherName: words.slice(1, -1).join(" "), surname: words[words.length - 1] });
+  return guess;
+}
+
+/** "Select Haribhagat" window: live search with a table of matches; a row picks the person, "Create New" starts a new one. */
+function PersonSearchModal({ canSeeMobile, loading, onSelect, onCreate, onClose }) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [searched, setSearched] = useState(false);
+  const [searching, startSearch] = useTransition();
+  const requestId = useRef(0);
+  const body = useRef(null);
+  const toast = useToast();
+  const text = query.trim();
+
+  useEffect(() => {
+    // the <dialog> is opened by Modal's own effect, so focus the box a tick later
+    const timer = setTimeout(() => body.current?.querySelector("input")?.focus(), 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (text.length < 2) return;
+    const current = ++requestId.current;
+    startSearch(async () => {
+      let rows;
+      try {
+        rows = await pickerSearchAction(text);
+      } catch {
+        toast.error("Search failed. Please try again.");
+        return;
+      }
+      if (current === requestId.current) {
+        setResults(rows);
+        setSearched(true);
+      }
+    });
+  }, [text, toast]);
+
+  function onQuery(value) {
+    setQuery(value);
+    if (value.trim().length < 2) {
+      requestId.current += 1; // ignore any search still in flight
+      setResults([]);
+      setSearched(false);
+    }
+  }
+
+  const showMobile = canSeeMobile && results.some((p) => p.mobileNo);
+
+  return (
+    <Modal title="Select Haribhagat" onClose={onClose} wide>
+      <div ref={body}>
+        <Label>Keyword to search Haribhagat</Label>
+        <div className="relative">
+          <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+          <DebounceInput
+            type="search"
+            onDebouncedChange={onQuery}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") event.preventDefault(); // Enter must not submit the entry form
+            }}
+            placeholder="Name, father name, surname, village or mobile…"
+            className="pl-10"
+            aria-label="Search Haribhagat"
+            autoComplete="off"
+          />
+          {(searching || loading) && <Loader2 aria-hidden className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted" />}
+        </div>
+
+        <div className="mt-4 min-h-48 overflow-x-auto rounded-xl border border-border">
+          {text.length < 2 ? (
+            <p className="px-4 py-6 text-sm text-muted">Type at least 2 letters to search.</p>
+          ) : !searched ? (
+            <p className="px-4 py-6 text-sm text-muted">Searching…</p>
+          ) : results.length === 0 ? (
+            <p className="px-4 py-6 text-sm text-muted">No Haribhagat found for “{text}”.</p>
+          ) : (
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-border bg-surface-muted text-xs uppercase tracking-wide text-muted">
+                <tr>
+                  <th className="px-4 py-2.5 font-semibold">Name</th>
+                  <th className="px-4 py-2.5 font-semibold">Village</th>
+                  <th className="px-4 py-2.5 font-semibold">District</th>
+                  {showMobile && <th className="px-4 py-2.5 font-semibold">Mobile</th>}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {results.map((p) => (
+                  <tr key={p.id} onClick={() => onSelect(p.id)} className="cursor-pointer hover:bg-primary-soft">
+                    <td className="px-4 py-2.5 font-medium">
+                      <button type="button" onClick={(event) => { event.stopPropagation(); onSelect(p.id); }} className="text-left text-primary hover:underline">
+                        {[p.name, p.fatherName, p.surname].filter(Boolean).join(" ")}
+                      </button>
+                    </td>
+                    <td className="px-4 py-2.5">{p.gam}</td>
+                    <td className="px-4 py-2.5">{p.jillo}</td>
+                    {showMobile && <td className="px-4 py-2.5">{p.mobileNo}</td>}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            Close
+          </Button>
+          <Button type="button" onClick={() => onCreate(query)}>
+            <UserPlus className="h-4 w-4" aria-hidden />
+            Create New
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
 }
 
 function DuplicateWarning({ onUse }) {
@@ -69,13 +195,8 @@ function DuplicateWarning({ onUse }) {
 export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels, countries = [] }) {
   const [person, setPerson] = useState(initialPerson);
   const [values, setValues] = useState(initialPerson ? toValues(initialPerson) : EMPTY);
-  const [query, setQuery] = useState("");
-  const [searchKey, setSearchKey] = useState(0); // changing it clears the search box
-  const [results, setResults] = useState([]);
-  const [searched, setSearched] = useState(false);
-  const [searching, startSearch] = useTransition();
+  const [searchOpen, setSearchOpen] = useState(false);
   const [loading, startLoad] = useTransition();
-  const requestId = useRef(0);
   const root = useRef(null);
   const toast = useToast();
   const locked = Boolean(person);
@@ -83,43 +204,6 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels, 
   useEffect(() => {
     if (countries.length === 0) toast.error("The country list could not be loaded. Type the country instead.");
   }, [countries.length, toast]);
-
-  useEffect(() => {
-    const text = query.trim();
-    if (text.length < 2) return undefined;
-    const current = ++requestId.current;
-    startSearch(async () => {
-      let rows;
-      try {
-        rows = await pickerSearchAction(text);
-      } catch {
-        toast.error("Search failed. Please try again.");
-        return;
-      }
-      if (current === requestId.current) {
-        setResults(rows);
-        setSearched(true);
-      }
-    });
-    return undefined;
-  }, [query, toast]);
-
-  /** Called by the search box once the user pauses typing. */
-  function onQuery(value) {
-    setQuery(value);
-    if (value.trim().length < 2) {
-      requestId.current += 1; // ignore any search still in flight
-      setResults([]);
-      setSearched(false);
-    }
-  }
-
-  function clearSearch() {
-    setQuery("");
-    setResults([]);
-    setSearched(false);
-    setSearchKey((key) => key + 1);
-  }
 
   function select(id) {
     startLoad(async () => {
@@ -133,7 +217,7 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels, 
       if (!details) return;
       setPerson(details);
       setValues(toValues(details));
-      clearSearch();
+      setSearchOpen(false);
     });
   }
 
@@ -142,12 +226,12 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels, 
     setValues(EMPTY);
   }
 
-  /** "Create" from the search box: start a new Haribhagat, prefilled from what was typed. */
-  function createNew() {
-    const guess = guessNewPerson(query);
+  /** "Create New" in the search window: start a new Haribhagat, prefilled from what was typed. */
+  function createNew(text) {
+    const guess = guessNewPerson(text);
     setPerson(null);
     setValues({ ...EMPTY, ...guess });
-    clearSearch();
+    setSearchOpen(false);
     setTimeout(() => root.current?.querySelector(`input[name="${guess.surname ? "fatherName" : "surname"}"]`)?.focus(), 0);
   }
 
@@ -169,53 +253,20 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels, 
       <div>
         <Label>{labels.haribhagats}</Label>
         <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-            <DebounceInput
-              key={searchKey}
-              type="search"
-              onDebouncedChange={onQuery}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") event.preventDefault(); // Enter must not submit the visit form
-              }}
-              placeholder="Search an existing Haribhagat by name, surname, village or mobile…"
-              className="pl-10"
-              aria-label="Search Haribhagat"
-              autoComplete="off"
-            />
-            {(searching || loading) && <Loader2 aria-hidden className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted" />}
-        </div>
-        {locked && (
-          <Button type="button" variant="secondary" onClick={clear}>
-            <X className="h-4 w-4" aria-hidden />
-            Clear
+          <Button type="button" variant="secondary" className="flex-1 justify-start font-normal text-muted" onClick={() => setSearchOpen(true)}>
+            <Search className="h-4 w-4 shrink-0" aria-hidden />
+            <span className="truncate">Search an existing Haribhagat by name, surname, village or mobile…</span>
           </Button>
-        )}
+          {locked && (
+            <Button type="button" variant="secondary" onClick={clear}>
+              <X className="h-4 w-4" aria-hidden />
+              Clear
+            </Button>
+          )}
         </div>
-
-        {query.trim().length >= 2 && searched && (
-          <ul className="mt-2 divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
-            {results.length === 0 ? (
-              <li className="px-3 py-2.5 text-sm text-muted">No Haribhagat found for “{query.trim()}”.</li>
-            ) : (
-              results.map((p) => (
-                <li key={p.id}>
-                  <button type="button" onClick={() => select(p.id)} className="flex w-full flex-wrap items-center justify-between gap-2 px-3 py-2.5 text-left text-sm hover:bg-primary-soft">
-                    <span className="font-medium">{[p.name, p.fatherName, p.surname].filter(Boolean).join(" ")}</span>
-                    <span className="text-xs text-muted">{[p.gam, p.jillo, p.mobileNo].filter(Boolean).join(", ")}</span>
-                  </button>
-                </li>
-              ))
-            )}
-            <li>
-              <button type="button" onClick={createNew} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-medium text-primary hover:bg-primary-soft">
-                <UserPlus className="h-4 w-4 shrink-0" aria-hidden />
-                Create new Haribhagat “{query.trim()}”
-              </button>
-            </li>
-          </ul>
-        )}
       </div>
+
+      {searchOpen && <PersonSearchModal canSeeMobile={canSeeMobile} loading={loading} onSelect={select} onCreate={createNew} onClose={() => setSearchOpen(false)} />}
 
       <div className="grid gap-x-3 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
         <Field label={labels.surname} name="surname" required={!locked}>
@@ -232,9 +283,6 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels, 
             <MobileInput name="mobileNo" placeholder={locked ? undefined : "10 digits"} {...bind("mobileNo")} />
           </Field>
         )}
-        <Field label={labels.pincode} name="pincode">
-          <Input name="pincode" inputMode="numeric" maxLength={6} placeholder={locked ? undefined : "6 digits"} {...bind("pincode")} />
-        </Field>
         <Field label={labels.gam} name="gam">
           <SuggestInput name="gam" field="gam" context={{ taluko: values.taluko, jillo: values.jillo, state: values.state, country: values.country }} maxLength={100} placeholder={hint("Village")} {...bind("gam")} onPick={pick("gam")} />
         </Field>
@@ -244,15 +292,8 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels, 
         <Field label={labels.jillo} name="jillo">
           <SuggestInput name="jillo" field="jillo" context={{ state: values.state, country: values.country }} maxLength={100} placeholder={hint("District")} {...bind("jillo")} onPick={pick("jillo")} />
         </Field>
-        <Field label={labels.state} name="state">
-          <StateSelect
-            country={values.country}
-            countries={countries}
-            value={values.state}
-            onChange={(state) => setValues((current) => ({ ...current, state }))}
-            disabled={locked}
-            placeholder={hint("State")}
-          />
+        <Field label={labels.pincode} name="pincode">
+          <Input name="pincode" inputMode="numeric" maxLength={6} placeholder={locked ? undefined : "6 digits"} {...bind("pincode")} />
         </Field>
         <Field label={labels.country} name="country">
           {countries.length > 0 ? (
@@ -267,6 +308,16 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels, 
           ) : (
             <SuggestInput name="country" field="country" maxLength={100} placeholder={hint("Type or pick a country")} {...bind("country")} onPick={pick("country")} />
           )}
+        </Field>
+        <Field label={labels.state} name="state">
+          <StateSelect
+            country={values.country}
+            countries={countries}
+            value={values.state}
+            onChange={(state) => setValues((current) => ({ ...current, state }))}
+            disabled={locked}
+            placeholder={hint("State")}
+          />
         </Field>
       </div>
 

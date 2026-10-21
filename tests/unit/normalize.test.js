@@ -5,6 +5,7 @@ import {
   eventNameKey,
   makeDupKey,
   loginCandidates,
+  looseKey,
   mobileInputValue,
   normalizeUsername,
   normalizeMobile,
@@ -96,6 +97,23 @@ describe("normalizeMobile", () => {
     expect(normalizeMobile("+44 7911 123456").error).toBeTruthy();
     expect(normalizeMobile("+1234").error).toBeTruthy();
     expect(normalizeMobile("98765432101").error).toBeTruthy();
+  });
+});
+
+describe("looseKey", () => {
+  it("gives the same key for spellings that sound alike", () => {
+    const patel = looseKey("PATEL");
+    expect(patel).toBe("ptl");
+    for (const variant of ["Ptel", "Pattel", "pateil", " P A T E L "]) expect(looseKey(variant)).toBe(patel);
+    expect(looseKey("Dhirajbhai")).toBe(looseKey("DHIRAJBAI"));
+    expect(looseKey("Shah")).toBe(looseKey("Sah"));
+  });
+
+  it("keeps different names apart and leaves other scripts alone", () => {
+    expect(looseKey("PATEL")).not.toBe(looseKey("SHAH"));
+    expect(looseKey("RAMESH")).not.toBe(looseKey("RAJESH"));
+    expect(looseKey("પટેલ")).toBe("પટેલ");
+    expect(looseKey(null)).toBe("");
   });
 });
 

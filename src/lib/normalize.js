@@ -113,6 +113,22 @@ export function eventNameKey(name) {
   return searchKey(name);
 }
 
+/**
+ * "Sounds alike" key for names, used to still find a person when the spelling differs: lower-case, accents and spaces
+ * removed, the vowels a e i o u y and the letter h removed, repeated letters squeezed. PATEL, PTEL, PATTEL and PATEIL all
+ * become "ptl", DHIRAJBHAI and DHIRAJBAI become "drjb". Text in other scripts (Gujarati) is kept as it is. The same steps are
+ * done in SQL (see services/search.js), so the two must stay in step.
+ */
+export function looseKey(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("en-US")
+    .replace(/\s+/g, "")
+    .replace(/[aeiouyh]/g, "")
+    .replace(/(.)\1+/g, "$1");
+}
+
 /** Digits only, used for partial mobile number searches. */
 export function digitsOnly(value) {
   return toAsciiDigits(value ?? "").replace(/\D/g, "");

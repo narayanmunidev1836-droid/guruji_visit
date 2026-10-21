@@ -1,8 +1,9 @@
 import "server-only";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getEnv } from "@/lib/env";
 import { canViewMobile } from "@/lib/permissions";
-import { normalizeText } from "@/lib/normalize";
+import { digitsOnly, looseKey, normalizeText } from "@/lib/normalize";
 import { parseDateInput } from "@/lib/format";
 import { buildPersonWhere, personTokenConditions, queryTokens } from "@/lib/services/person-filters";
 import { VISIT_CARD_INCLUDE } from "@/lib/services/visits";
@@ -123,10 +124,55 @@ export function hasSearchFilters(filters) {
   return Object.entries(rest).some(([key, value]) => !key.endsWith("Text") && value !== null && value !== undefined && value !== "");
 }
 
+const LOOSE_COLUMNS = ["name", "fatherName", "surname", "gam", "taluko", "jillo"];
+const LOOSE_FIELDS = [...LOOSE_COLUMNS, "q"];
+const LOOSE_MAX_PEOPLE = 300;
+
+const column = (name) => Prisma.raw(`"${name}"`); // only ever called with the fixed names above
+
+/**
+ * The SQL twin of looseKey() in normalize.js. One flat raw fragment on purpose: Prisma.sql inside Prisma.sql inside Prisma.sql
+ * loses text, and the column name is one of the fixed names above, never user input.
+ */
+const looseSql = (name) =>
+  Prisma.raw(String.raw`regexp_replace(regexp_replace(regexp_replace(lower("${name}"), '\s', '', 'g'), '[aeiouyh]', '', 'g'), '(.)\1+', '\1', 'g')`);
+
+const likeText = (text) => text.replace(/[\\%_]/g, (ch) => `\\${ch}`);
+
+/** One word against one name column: by sound when the key is long enough to mean something, else plain "contains". */
+function looseCondition(name, word) {
+  const key = looseKey(word);
+  if (key.length >= 2) return Prisma.sql`${looseSql(name)} LIKE ${`%${likeText(key)}%`}`;
+  return Prisma.sql`${column(name)} ILIKE ${`%${likeText(word)}%`}`;
+}
+
+/**
+ * Ids of the people whose name / village / ... SOUNDS like what was typed (PTEL finds PATEL). Used only when the exact search
+ * found nothing. Every typed field must match the same person; words of the quick box may match any of the name columns.
+ */
+async function looseHaribhagatIds(filters, { allowMobile }) {
+  const conditions = [];
+  for (const name of LOOSE_COLUMNS) {
+    const word = normalizeText(filters[name]);
+    if (word) conditions.push(looseCondition(name, word));
+  }
+  for (const token of queryTokens(filters.q)) {
+    conditions.push(Prisma.join(LOOSE_COLUMNS.map((name) => looseCondition(name, token)), " OR ", "(", ")"));
+  }
+  if (conditions.length === 0) return [];
+  const pincode = digitsOnly(filters.pincode);
+  if (pincode) conditions.push(Prisma.sql`"pincode" LIKE ${`%${pincode}%`}`);
+  const mobile = digitsOnly(filters.mobileNo);
+  if (mobile) conditions.push(allowMobile ? Prisma.sql`"mobileNo" LIKE ${`%${mobile}%`}` : Prisma.sql`FALSE`);
+  const rows = await db.$queryRaw`SELECT "id" FROM "Haribhagat" WHERE ${Prisma.join(conditions, " AND ")} LIMIT ${LOOSE_MAX_PEOPLE}`;
+  return rows.map((row) => row.id);
+}
+
 /**
  * Main visit search, always paginated. Each visit carries its people, hard disk and folder.
  * With no filter set it returns the LATEST entries (newest created first, 10 per page, `latest: true`);
- * with filters it returns the matches, newest visit date first.
+ * with filters it returns the matches, newest visit date first. When the typed names match nobody exactly, similar spellings
+ * are tried (`loose: true` in the result): PTEL finds PATEL. That second try looks at the people only, not at disk / path / notes.
  */
 export async function searchVisits(user, filters) {
   const allowMobile = canViewMobile(user, getEnv().mobileVisibleRoles);
@@ -139,5 +185,17 @@ export async function searchVisits(user, filters) {
     db.visit.findMany({ where, orderBy, skip: (page - 1) * pageSize, take: pageSize, include: VISIT_CARD_INCLUDE }),
     db.visit.count({ where }),
   ]);
-  return { items, total, page, pageSize, latest, totalPages: Math.max(1, Math.ceil(total / pageSize)) };
+  const found = { items, total, page, pageSize, latest, loose: false, totalPages: Math.max(1, Math.ceil(total / pageSize)) };
+  if (latest || total > 0 || !LOOSE_FIELDS.some((field) => normalizeText(filters[field]))) return found;
+
+  const ids = await looseHaribhagatIds(filters, { allowMobile });
+  if (ids.length === 0) return found;
+  const others = buildVisitWhere({ ...filters, q: null, name: null, fatherName: null, surname: null, gam: null, taluko: null, jillo: null, pincode: null, mobileNo: null }, { allowMobile });
+  const similar = { AND: [others, { haribhagats: { some: { haribhagatId: { in: ids } } } }] };
+  const [similarItems, similarTotal] = await Promise.all([
+    db.visit.findMany({ where: similar, orderBy, skip: (page - 1) * pageSize, take: pageSize, include: VISIT_CARD_INCLUDE }),
+    db.visit.count({ where: similar }),
+  ]);
+  if (similarTotal === 0) return found;
+  return { ...found, items: similarItems, total: similarTotal, loose: true, totalPages: Math.max(1, Math.ceil(similarTotal / pageSize)) };
 }
