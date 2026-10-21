@@ -5,8 +5,9 @@ import clsx from "clsx";
 const control =
   "w-full rounded-xl border border-border bg-white px-3 text-sm text-foreground placeholder:normal-case placeholder:text-muted/70 transition-[border-color,box-shadow] focus:border-ring focus:outline-none focus:ring-[3px] focus:ring-ring/20 disabled:opacity-60";
 
-// Everything users type is shown (and saved) in CAPITALS; e-mail, password and the login e-mail field stay as typed.
-const keepCase = (type, name) => type === "password" || type === "email" || name === "email";
+// Everything users type is shown (and saved) in CAPITALS, except what is typed to log in or to identify an account: e-mail,
+// username, the login box and every password box (also while a password is shown as text) stay exactly as typed.
+const keepCase = (type, name) => type === "password" || type === "email" || ["email", "login", "username"].includes(name) || /password/i.test(name ?? "");
 
 export function Input({ className, ...props }) {
   return <input className={clsx(control, "h-10", !keepCase(props.type, props.name) && "uppercase", className)} {...props} />;

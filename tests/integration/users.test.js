@@ -47,6 +47,27 @@ describe.skipIf(!HAS_DB)("users and authentication", () => {
     expect((await users.authenticate("9876500002", "correct-horse-1")).ok).toBe(false);
   });
 
+  it("ignores capital / small letters in the login and the e-mail, but the PASSWORD is case sensitive", async () => {
+    expect((await users.authenticate("ADMIN", "correct-horse-1")).ok).toBe(true);
+    expect((await users.authenticate("Admin@EXAMPLE.org", "correct-horse-1")).ok).toBe(true);
+    expect((await users.authenticate("admin", "Correct-Horse-1")).ok).toBe(false);
+    expect((await users.authenticate("admin", "CORRECT-HORSE-1")).ok).toBe(false);
+
+    expect((await users.changeOwnPassword(admin, "correct-horse-1", "New-Password-77")).ok).toBe(true);
+    expect((await users.authenticate("admin", "New-Password-77")).ok).toBe(true);
+    expect((await users.authenticate("admin", "new-password-77")).ok).toBe(false);
+    expect((await users.changeOwnPassword(admin, "NEW-PASSWORD-77", "Another-Pass-88")).ok).toBe(false); // the current password must match exactly
+  });
+
+  it("never accepts another capitalisation of the password, and a login never changes the stored password", async () => {
+    const before = (await db.user.findUnique({ where: { id: admin.id } })).passwordHash;
+    for (const wrong of ["Correct-horse-1", "CORRECT-HORSE-1", "correct-horse-1 "]) {
+      expect((await users.authenticate("admin", wrong)).ok, wrong).toBe(false);
+    }
+    expect((await users.authenticate("admin", "correct-horse-1")).ok).toBe(true);
+    expect((await db.user.findUnique({ where: { id: admin.id } })).passwordHash).toBe(before);
+  });
+
   it("still logs in a user whose e-mail field is a plain word (like a seeded \"admin\")", async () => {
     await db.user.create({ data: { name: "Old", email: "root", role: "STAFF", passwordHash: await (await import("@/lib/auth/password")).hashPassword("root-password-1") } });
     expect((await users.authenticate("root", "root-password-1")).ok).toBe(true);

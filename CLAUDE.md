@@ -25,7 +25,7 @@ npm test                                                         # unit (no DB)
 TEST_DATABASE_URL=postgres://… npm run test:integration          # DB tests, TRUNCATEs the DB! (helpers refuse the .env database)
 ```
 **After a Prisma schema change: `prisma generate` and restart `next dev`** (the running server keeps the old client in memory → "Expected SortOrder, provided Object" style errors).
-Admin login = `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` from `.env`. **Login accepts a username, an e-mail or a 10-digit mobile number** (a username is **any text**, only max 50 chars, stored lower-case; the typed login is tried as username, e-mail and mobile - `loginCandidates` in `normalize.js`; `User.username` / `User.mobileNo`, both unique, set by an admin on `/users`; the seeded admin has only an e-mail until a username is added). Seed once per database. E2E tests (`tests/e2e`) still target the OLD flows and need rewriting.
+Admin login = `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` from `.env`. **Login accepts a username, an e-mail or a 10-digit mobile number** (a username is **any text**, only max 50 chars, stored lower-case; the typed login is tried as username, e-mail and mobile - `loginCandidates` in `normalize.js`; `User.username` / `User.mobileNo`, both unique, set by an admin on `/users`; the seeded admin has only an e-mail until a username is added). **Username and e-mail are not case sensitive, the PASSWORD is** (`src/lib/auth/password.js`: hashed and compared exactly as typed, no other spelling is ever tried). Seed once per database. E2E tests (`tests/e2e`) still target the OLD flows and need rewriting.
 
 ## Architecture in one picture
 ```
