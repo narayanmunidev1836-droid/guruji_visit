@@ -48,11 +48,7 @@ export async function createEvent(actor, input) {
 
   const existing = await db.event.findUnique({ where: { nameKey } });
   if (existing) {
-    return fail("An event with this name already exists.", {
-      name: existing.isActive
-        ? "An event with this name already exists."
-        : "An event with this name exists but is inactive. Activate it instead.",
-    });
+    return fail("An event with this name already exists.", { name: "An event with this name already exists." });
   }
   try {
     const event = await db.event.create({ data: { name, nameKey, description } });
@@ -62,6 +58,22 @@ export async function createEvent(actor, input) {
     if (isUniqueViolation(error)) return fail("An event with this name already exists.", { name: "Already exists." });
     throw error;
   }
+}
+
+/**
+ * Deletes an event. Refused while any entry (visit) uses it: those entries would lose their event, so change them to another
+ * event first.
+ */
+export async function deleteEvent(actor, id) {
+  const event = await db.event.findUnique({ where: { id }, include: { _count: { select: { visits: true } } } });
+  if (!event) return fail("Event not found.");
+  const count = event._count.visits;
+  if (count > 0) {
+    return fail(`"${event.name}" is used in ${count} ${count === 1 ? "entry" : "entries"}, so it cannot be deleted. Change those entries to another event first.`);
+  }
+  await db.event.delete({ where: { id } });
+  await audit(actor, "event.delete", "Event", id, { name: event.name });
+  return ok();
 }
 
 export async function updateEvent(actor, id, input) {
@@ -85,12 +97,3 @@ export async function updateEvent(actor, id, input) {
   }
 }
 
-/** Events referenced by old records are deactivated, never deleted. */
-export async function setEventActive(actor, id, isActive) {
-  const current = await db.event.findUnique({ where: { id } });
-  if (!current) return fail("Event not found.");
-  if (current.isActive === isActive) return ok({ event: current });
-  const event = await db.event.update({ where: { id }, data: { isActive } });
-  await audit(actor, isActive ? "event.activate" : "event.deactivate", "Event", id, { name: current.name });
-  return ok({ event });
-}

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { Plus, Search, Star, X } from "lucide-react";
 import clsx from "clsx";
 import { pickerSearchAction } from "@/actions/haribhagats";
+import { useToast } from "@/components/ui/toast";
 import { DebounceInput } from "@/components/ui/debounce-input";
 import { Label } from "@/components/ui/inputs";
 
@@ -26,20 +27,27 @@ export function HaribhagatPicker({ initial = [], initialPrimaryId = null, label,
   const [searched, setSearched] = useState(false);
   const [pending, startTransition] = useTransition();
   const requestId = useRef(0);
+  const toast = useToast();
 
   useEffect(() => {
     const text = query.trim();
     if (text.length < 2) return undefined;
     const current = ++requestId.current;
     startTransition(async () => {
-      const rows = await pickerSearchAction(text);
+      let rows;
+      try {
+        rows = await pickerSearchAction(text);
+      } catch {
+        toast.error("Search failed. Please try again.");
+        return;
+      }
       if (current === requestId.current) {
         setResults(rows);
         setSearched(true);
       }
     });
     return undefined;
-  }, [query]);
+  }, [query, toast]);
 
   const selectedIds = new Set(selected.map((p) => p.id));
   const effectivePrimary = selectedIds.has(primaryId) ? primaryId : (selected[0]?.id ?? null);

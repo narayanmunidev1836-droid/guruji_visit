@@ -5,6 +5,7 @@ import { listStatesAction } from "@/actions/haribhagats";
 import { countryOptions } from "@/lib/countries";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SuggestInput } from "@/components/ui/suggest-input";
+import { useToast } from "@/components/ui/toast";
 
 /**
  * State box that follows the chosen country: a searchable dropdown of that country's states (free CountriesNow API).
@@ -15,15 +16,20 @@ import { SuggestInput } from "@/components/ui/suggest-input";
 export function StateSelect({ name = "state", country, countries = [], value, onChange, disabled = false, placeholder = "Type or pick a state", maxLength = 100 }) {
   const [loaded, setLoaded] = useState({ country: "", states: [] });
   const requestId = useRef(0);
+  const toast = useToast();
   const label = countries.find((entry) => entry.toLocaleUpperCase("en-US") === country) ?? "";
 
   useEffect(() => {
     if (!label || disabled) return;
     const current = ++requestId.current;
-    listStatesAction(label).then((states) => {
-      if (current === requestId.current) setLoaded({ country, states });
-    });
-  }, [label, country, disabled]);
+    listStatesAction(label)
+      .then(({ states, failed }) => {
+        if (current !== requestId.current) return;
+        setLoaded({ country, states });
+        if (failed) toast.error("The state list could not be loaded. Type the state instead.");
+      })
+      .catch(() => toast.error("The state list could not be loaded. Type the state instead."));
+  }, [label, country, disabled, toast]);
 
   const states = loaded.country === country && !disabled ? loaded.states : [];
 

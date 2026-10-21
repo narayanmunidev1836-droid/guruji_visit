@@ -12,6 +12,7 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { countryOptions, DEFAULT_COUNTRY, DEFAULT_STATE } from "@/lib/countries";
 import { SuggestInput } from "@/components/ui/suggest-input";
 import { StateSelect } from "@/components/state-select";
+import { useToast } from "@/components/ui/toast";
 
 function DuplicateWarning() {
   const { state } = useFormState();
@@ -63,6 +64,10 @@ function CloseWhenSaved({ onDone }) {
  */
 export function HaribhagatForm({ person, labels, returnTo, countries = [], modal = false, onDone, onCancel }) {
   const v = person ?? {};
+  const toast = useToast();
+  useEffect(() => {
+    if (countries.length === 0) toast.error("The country list could not be loaded. Type the country instead.");
+  }, [countries.length, toast]);
   // The state list follows the chosen country, so both are controlled here. A new person starts as India / Gujarat.
   const [country, setCountry] = useState(v.country ?? (person ? "" : DEFAULT_COUNTRY));
   const [state, setState] = useState(v.state ?? (person ? "" : DEFAULT_STATE));

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { HAS_DB, getDb, makePerson, makeUser, resetDb } from "./helpers.js";
+import { HAS_DB, getDb, makeDisk, makePerson, makeUser, resetDb } from "./helpers.js";
 
 describe.skipIf(!HAS_DB)("events master data", () => {
   let db;
@@ -18,21 +18,11 @@ describe.skipIf(!HAS_DB)("events master data", () => {
 
   const activeNames = async () => (await events.listActiveEvents()).map((e) => e.name);
 
-  it("the dropdown only contains active events and follows add / deactivate / activate", async () => {
+  it("the dropdown lists the events A-Z and every row carries isActive (forms use it)", async () => {
+    await events.createEvent(admin, { name: "Vichran" });
     await events.createEvent(admin, { name: "Pathramani" });
-    const vichran = (await events.createEvent(admin, { name: "Vichran" })).event;
     expect(await activeNames()).toEqual(["PATHRAMANI", "VICHRAN"]);
-    // forms use `isActive` to label inactive options, so every dropdown row must carry it (regression)
     expect((await events.listActiveEvents()).every((e) => e.isActive === true)).toBe(true);
-
-    await events.setEventActive(admin, vichran.id, false);
-    expect(await activeNames()).toEqual(["PATHRAMANI"]);
-
-    await events.createEvent(admin, { name: "Sabha" });
-    expect(await activeNames()).toEqual(["PATHRAMANI", "SABHA"]);
-
-    await events.setEventActive(admin, vichran.id, true);
-    expect(await activeNames()).toEqual(["PATHRAMANI", "SABHA", "VICHRAN"]);
   });
 
   it("rejects duplicate names regardless of case and spacing", async () => {
@@ -41,14 +31,6 @@ describe.skipIf(!HAS_DB)("events master data", () => {
     expect(dup.ok).toBe(false);
     expect(dup.fieldErrors.name).toBeTruthy();
     expect(await db.event.count()).toBe(1);
-  });
-
-  it("explains that an inactive event with the same name should be re-activated", async () => {
-    const created = (await events.createEvent(admin, { name: "Utsav" })).event;
-    await events.setEventActive(admin, created.id, false);
-    const dup = await events.createEvent(admin, { name: "Utsav" });
-    expect(dup.ok).toBe(false);
-    expect(dup.fieldErrors.name).toMatch(/inactive/i);
   });
 
   it("requires a name", async () => {
@@ -64,13 +46,21 @@ describe.skipIf(!HAS_DB)("events master data", () => {
     expect((await events.updateEvent(admin, a.id, { name: "Alpha", description: "now with text" })).ok).toBe(true);
   });
 
-  it("keeps a deactivated event selectable for the record that already uses it", async () => {
-    const ev = (await events.createEvent(admin, { name: "Old event" })).event;
-    await events.createEvent(admin, { name: "Current" });
-    await events.setEventActive(admin, ev.id, false);
-    const options = await events.listEventsForSelect(ev.id);
-    expect(options.map((o) => o.name).sort()).toEqual(["Current", "Old event"]);
-    expect((await events.listEventsForSelect()).map((o) => o.name)).toEqual(["Current"]);
+  it("deletes an event only when no entry uses it", async () => {
+    const used = (await events.createEvent(admin, { name: "Used" })).event;
+    const free = (await events.createEvent(admin, { name: "Free" })).event;
+    const disk = await makeDisk(db, "HDD-X");
+    await db.visit.create({ data: { eventId: used.id, hardDiskId: disk.id, folderPath: "A" } });
+
+    const refused = await events.deleteEvent(admin, used.id);
+    expect(refused.ok).toBe(false);
+    expect(refused.error).toContain("another event first");
+    expect(await db.event.count({ where: { id: used.id } })).toBe(1);
+
+    expect((await events.deleteEvent(admin, free.id)).ok).toBe(true);
+    expect(await db.event.count({ where: { id: free.id } })).toBe(0);
+    expect((await events.deleteEvent(admin, free.id)).ok).toBe(false);
+    expect(await db.auditLog.findFirst({ where: { action: "event.delete" } })).toBeTruthy();
   });
 
   it("writes an audit log entry for changes", async () => {

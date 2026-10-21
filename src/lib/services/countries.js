@@ -28,22 +28,25 @@ export async function listCountries() {
 const statesCache = new Map(); // country name -> { at, states }, so a country is fetched at most once a day per server
 
 /**
- * State / province names of one country (e.g. "India" -> 37 states and union territories), A-Z.
- * Returns [] when the country is unknown to the API or the API cannot be reached; the form then uses a text box.
+ * State / province names of one country (e.g. "India" -> 37 states and union territories), A-Z, as { states, failed }.
+ * `states` is [] when the country is unknown to the API (the form then uses a text box). `failed` is true only when the
+ * API itself could not be reached or answered with a server error, so the form can tell the user.
  */
 export async function listStates(country) {
   const name = String(country ?? "").trim().slice(0, 100);
-  if (!name) return [];
+  if (!name) return { states: [], failed: false };
   const cached = statesCache.get(name);
-  if (cached && Date.now() - cached.at < 24 * 60 * 60 * 1000) return cached.states;
+  if (cached && Date.now() - cached.at < 24 * 60 * 60 * 1000) return { states: cached.states, failed: false };
+  let answered = false;
   for (const candidate of stateLookupNames(name)) {
-    const states = await fetchStates(candidate);
-    if (states.length > 0) {
-      statesCache.set(name, { at: Date.now(), states });
-      return states;
+    const result = await fetchStates(candidate);
+    if (result.states.length > 0) {
+      statesCache.set(name, { at: Date.now(), states: result.states });
+      return { states: result.states, failed: false };
     }
+    if (!result.failed) answered = true; // the API answered ("no such country" is an answer)
   }
-  return [];
+  return { states: [], failed: !answered };
 }
 
 async function fetchStates(name) {
@@ -55,9 +58,10 @@ async function fetchStates(name) {
       cache: "no-store",
       signal: AbortSignal.timeout(8000),
     });
-    return parseStateNames(response.ok ? await response.json() : null);
+    if (response.status >= 500) return { states: [], failed: true };
+    return { states: parseStateNames(response.ok ? await response.json() : null), failed: false };
   } catch (error) {
     console.warn("[countries] could not load the states of " + name + ":", error.message);
-    return [];
+    return { states: [], failed: true };
   }
 }

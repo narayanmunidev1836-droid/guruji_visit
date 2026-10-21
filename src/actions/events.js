@@ -5,7 +5,7 @@ import { runAction } from "@/lib/action";
 import { requirePermission } from "@/lib/auth/dal";
 import { ok } from "@/lib/result";
 import { formDataToObject } from "@/lib/validation";
-import { createEvent, setEventActive, updateEvent } from "@/lib/services/events";
+import { createEvent, deleteEvent, updateEvent } from "@/lib/services/events";
 
 export async function createEventAction(_prev, formData) {
   return runAction(async () => {
@@ -28,13 +28,12 @@ export async function updateEventAction(_prev, formData) {
   });
 }
 
-export async function toggleEventAction(formData) {
-  const result = await runAction(async () => {
+export async function deleteEventAction(id) {
+  return runAction(async () => {
     const user = await requirePermission("event.manage");
-    const id = Number(formData.get("id"));
-    const isActive = formData.get("isActive") === "true";
-    return setEventActive(user, id, isActive);
+    const result = await deleteEvent(user, Number(id));
+    if (!result.ok) return result;
+    revalidatePath("/events");
+    return ok();
   });
-  if (result && result.ok === false) console.warn("[toggleEvent]", result.error);
-  revalidatePath("/events");
 }

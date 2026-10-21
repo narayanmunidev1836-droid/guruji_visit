@@ -30,7 +30,7 @@ export const PERMISSIONS = {
   "visit.write": [ROLES.ADMIN, ROLES.STAFF],
   "photo.write": [ROLES.ADMIN, ROLES.STAFF],
   "event.create": [ROLES.ADMIN], // staff only when an administrator granted it (GRANTS below)
-  "event.manage": [ROLES.ADMIN],
+  "event.manage": [ROLES.ADMIN], // edit / deactivate / delete an event: same people as event.create (GRANTS below)
   "disk.create": [ROLES.ADMIN], // staff only when an administrator granted it (GRANTS below)
   "disk.manage": [ROLES.ADMIN],
   "user.manage": [ROLES.ADMIN],
@@ -41,6 +41,7 @@ export const PERMISSIONS = {
 export const GRANTS = {
   "disk.create": "canCreateDisks",
   "event.create": "canCreateEvents",
+  "event.manage": "canCreateEvents", // whoever may add events may also edit, deactivate and delete them
 };
 
 export function can(user, permission) {

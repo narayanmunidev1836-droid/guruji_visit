@@ -7,7 +7,7 @@ import { t } from "@/lib/labels";
 import { formatDate } from "@/lib/format";
 import { getVisit } from "@/lib/services/visits";
 import { personName, personPlace } from "@/lib/ui-labels";
-import { Alert } from "@/components/ui/alert";
+import { FlashToast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardBody, CardHeader, PageHeader } from "@/components/ui/card";
@@ -50,11 +50,7 @@ export default async function VisitPage({ params, searchParams }) {
         }
       />
 
-      {raw.saved && (
-        <Alert tone="success" className="mb-6">
-          Entry saved.
-        </Alert>
-      )}
+      {raw.saved && <FlashToast message="Entry saved." />}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-6">

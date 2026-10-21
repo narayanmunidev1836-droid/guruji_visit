@@ -43,7 +43,7 @@ export function HaribhagatRowActions({ person, canWrite, labels, countries }) {
           <button type="button" onClick={() => setEditing(true)} className={iconLink} title="Edit" aria-label="Edit">
             <Pencil className="h-4 w-4" aria-hidden />
           </button>
-          <ConfirmDeleteButton action={deleteHaribhagatAction} id={person.id} confirmText={`Delete ${name}? This cannot be undone.`} />
+          <ConfirmDeleteButton action={deleteHaribhagatAction} id={person.id} confirmText={`Delete ${name}? This cannot be undone.`} successMessage="Haribhagat deleted." />
         </>
       )}
       {editing && (

@@ -47,7 +47,7 @@ Search URL parameters (`/search`): `q, name, fatherName, surname, gam, taluko, j
 |---|---|---|
 | `auth.js` | `loginAction`, `logoutAction`, `changePasswordAction` | public / login |
 | `haribhagats.js` | `saveHaribhagatAction` (create/edit, duplicate warning, `confirmDuplicate=1`), `pickerSearchAction` (type-ahead, no mobile numbers) | `haribhagat.write` / login |
-| `events.js` | `createEventAction` (`event.create`), `updateEventAction`, `toggleEventAction` (`event.manage`) | see permission matrix |
+| `events.js` | `createEventAction` (`event.create`), `updateEventAction`, `deleteEventAction` (`event.manage`; both need the admin role or the *Add events* grant) | see permission matrix |
 | `disks.js` | `createDiskAction` (`disk.create`: ADMIN+STAFF); `updateDiskAction`, `toggleDiskAction`, `unbindDiskAction` (`disk.manage`: ADMIN) | see left |
 | `visits.js` | `createVisitAction`, `updateVisitAction`, `attachPhotosAction`, `detachPhotosAction` | `visit.write` |
 | `photos.js` | `updatePhotoNotesAction`, `linkPhotoToVisitAction`, `unlinkPhotoAction` | `photo.write` |

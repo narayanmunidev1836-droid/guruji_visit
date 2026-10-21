@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { Loader2 } from "lucide-react";
 import { buttonClasses } from "@/components/ui/button";
 import { Label } from "@/components/ui/inputs";
+import { useToast } from "@/components/ui/toast";
 
 const FormStateContext = createContext({ state: null, pending: false });
 
@@ -17,15 +18,23 @@ export function useFormState() {
  * - Submits through startTransition instead of <form action> so React does NOT clear the inputs after a
  *   validation error; the user keeps what they typed.
  * - `resetOnSuccess` clears the form after a successful save (e.g. "add event").
- * - Server results look like { ok, message, error, fieldErrors, ... } (see src/lib/result.js).
+ * - Server results look like { ok, message, error, fieldErrors, ... } (see src/lib/result.js); message / error are toasts.
  */
-export function ActionForm({ action, children, className, resetOnSuccess = false, hideMessage = false }) {
+export function ActionForm({ action, children, className, resetOnSuccess = false }) {
   const [state, formAction, pending] = useActionState(action, null);
   const formRef = useRef(null);
+  const toast = useToast();
 
   useEffect(() => {
     if (state?.ok && resetOnSuccess) formRef.current?.reset();
   }, [state, resetOnSuccess]);
+
+  // The result is shown as a toast that closes by itself. Errors of single fields also stay under their fields, and a
+  // "similar person already exists" warning has its own panel in the form, so that one is not toasted.
+  useEffect(() => {
+    if (state?.ok && state.message) toast.success(state.message);
+    else if (state?.ok === false && state.error && !state.duplicates?.length) toast.error(state.error);
+  }, [state, toast]);
 
   function onSubmit(event) {
     event.preventDefault();
@@ -37,32 +46,10 @@ export function ActionForm({ action, children, className, resetOnSuccess = false
   return (
     <form ref={formRef} onSubmit={onSubmit} className={className}>
       <FormStateContext value={{ state, pending }}>
-        {!hideMessage && <FormMessage />}
         {children}
       </FormStateContext>
     </form>
   );
-}
-
-export function FormMessage() {
-  const { state } = useFormState();
-  if (!state) return null;
-  if (state.duplicates?.length) return null; // the duplicate warning shows its own message with the options
-  if (state.ok && state.message) {
-    return (
-      <p role="status" className="mb-4 rounded-lg border border-success/30 bg-success-soft px-3 py-2 text-sm text-success">
-        {state.message}
-      </p>
-    );
-  }
-  if (state.ok === false && state.error) {
-    return (
-      <p role="alert" className="mb-4 rounded-lg border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-danger">
-        {state.error}
-      </p>
-    );
-  }
-  return null;
 }
 
 /** Label + control + inline error. The control is nested in <label> so no ids are needed. */

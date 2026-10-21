@@ -1,8 +1,12 @@
 "use client";
 
-import { createEventAction, updateEventAction } from "@/actions/events";
-import { ActionForm, Field, FormActions, SubmitButton } from "@/components/ui/form";
+import { useEffect, useState } from "react";
+import { Pencil } from "lucide-react";
+import { createEventAction, deleteEventAction, updateEventAction } from "@/actions/events";
+import { ActionForm, Field, FormActions, SubmitButton, useFormState } from "@/components/ui/form";
+import { ConfirmDeleteButton } from "@/components/ui/confirm-delete-button";
 import { Input } from "@/components/ui/inputs";
+import { Modal } from "@/components/ui/modal";
 
 export function AddEventForm({ labels }) {
   return (
@@ -18,9 +22,19 @@ export function AddEventForm({ labels }) {
   );
 }
 
-export function EditEventForm({ event, labels }) {
+/** Closes the edit dialog once the server says the event was saved. */
+function CloseWhenSaved({ onDone }) {
+  const { state } = useFormState();
+  useEffect(() => {
+    if (state?.ok) onDone?.();
+  }, [state, onDone]);
+  return null;
+}
+
+function EditEventForm({ event, labels, onSaved }) {
   return (
-    <ActionForm action={updateEventAction} className="grid gap-4 sm:grid-cols-[1fr_1.5fr_auto] sm:items-end">
+    <ActionForm action={updateEventAction} className="space-y-4">
+      <CloseWhenSaved onDone={onSaved} />
       <input type="hidden" name="id" value={event.id} />
       <Field label={labels.name} name="name" required>
         <Input name="name" defaultValue={event.name} required maxLength={100} autoComplete="off" />
@@ -28,9 +42,33 @@ export function EditEventForm({ event, labels }) {
       <Field label={labels.description} name="description">
         <Input name="description" defaultValue={event.description ?? ""} maxLength={500} autoComplete="off" />
       </Field>
-      <FormActions className="mt-0">
-        <SubmitButton size="md">{labels.save}</SubmitButton>
+      <FormActions className="justify-end">
+        <SubmitButton>{labels.save}</SubmitButton>
       </FormActions>
     </ActionForm>
+  );
+}
+
+/** Edit (opens a dialog) and Delete icons for one event row. Shown only to people who may manage events. */
+export function EventRowActions({ event, labels }) {
+  const [editing, setEditing] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setEditing(true)}
+        title={labels.edit}
+        aria-label={labels.edit}
+        className="inline-grid h-8 w-8 place-items-center rounded-lg text-primary hover:bg-primary-soft"
+      >
+        <Pencil className="h-4 w-4" aria-hidden />
+      </button>
+      <ConfirmDeleteButton action={deleteEventAction} id={event.id} confirmText={`Delete the event "${event.name}"? This cannot be undone.`} successMessage="Event deleted." />
+      {editing && (
+        <Modal title={`${labels.edit}: ${event.name}`} onClose={() => setEditing(false)}>
+          <EditEventForm event={event} labels={labels} onSaved={() => setEditing(false)} />
+        </Modal>
+      )}
+    </>
   );
 }

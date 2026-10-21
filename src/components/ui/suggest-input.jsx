@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import clsx from "clsx";
 import { suggestPlaceAction } from "@/actions/haribhagats";
+import { useToast } from "@/components/ui/toast";
 import { Input } from "@/components/ui/inputs";
 
 /**
@@ -15,6 +16,7 @@ export function SuggestInput({ field, context, value: controlledValue, defaultVa
   const [ownValue, setOwnValue] = useState(defaultValue ?? ""); // used when no `value` is passed
   const value = controlledValue ?? ownValue;
   const listId = useId();
+  const toast = useToast();
   const root = useRef(null);
   const requestId = useRef(0);
   const [open, setOpen] = useState(false);
@@ -26,14 +28,20 @@ export function SuggestInput({ field, context, value: controlledValue, defaultVa
     if (!open || readOnly) return undefined;
     const current = ++requestId.current;
     const timer = setTimeout(async () => {
-      const rows = await suggestPlaceAction(field, value ?? "", JSON.parse(contextKey));
+      let rows;
+      try {
+        rows = await suggestPlaceAction(field, value ?? "", JSON.parse(contextKey));
+      } catch {
+        toast.error("Suggestions could not be loaded. You can still type it.");
+        return;
+      }
       if (current === requestId.current) {
         setItems(rows);
         setActive(-1);
       }
     }, 200);
     return () => clearTimeout(timer);
-  }, [open, value, field, contextKey, readOnly]);
+  }, [open, value, field, contextKey, readOnly, toast]);
 
   const typed = (value ?? "").trim().toUpperCase();
   const shown = items.filter((item) => item.toUpperCase() !== typed); // nothing to suggest once the exact value is typed

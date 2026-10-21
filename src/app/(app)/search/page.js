@@ -5,7 +5,6 @@ import { t } from "@/lib/labels";
 import { filtersToParams, parseSearchParams, searchVisits } from "@/lib/services/search";
 import { listEvents } from "@/lib/services/events";
 import { listDisks } from "@/lib/services/disks";
-import { Alert } from "@/components/ui/alert";
 import { PageHeader, EmptyState } from "@/components/ui/card";
 import { Pagination } from "@/components/ui/pagination";
 import { SearchForm } from "@/components/search-form";
@@ -28,12 +27,6 @@ export default async function SearchPage({ searchParams }) {
         title={t("search")}
         description="Search a Haribhagat by name, surname, village or mobile. You see every visit of that Haribhagat with the hard disk and path where the photos are kept."
       />
-
-      {raw.saved && (
-        <Alert tone="success" className="mb-4">
-          Entry saved.
-        </Alert>
-      )}
 
       <SearchForm values={params} events={events} disks={disks} allowMobile={allowMobile} />
 

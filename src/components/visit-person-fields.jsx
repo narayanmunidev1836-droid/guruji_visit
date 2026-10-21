@@ -5,6 +5,7 @@ import { AlertTriangle, Loader2, Search, UserPlus, X } from "lucide-react";
 import { haribhagatDetailsAction, pickerSearchAction } from "@/actions/haribhagats";
 import { Field, SubmitButton, useFormState } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import { DebounceInput } from "@/components/ui/debounce-input";
 import { MobileInput } from "@/components/ui/mobile-input";
 import { SuggestInput } from "@/components/ui/suggest-input";
@@ -76,21 +77,32 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels, 
   const [loading, startLoad] = useTransition();
   const requestId = useRef(0);
   const root = useRef(null);
+  const toast = useToast();
   const locked = Boolean(person);
+
+  useEffect(() => {
+    if (countries.length === 0) toast.error("The country list could not be loaded. Type the country instead.");
+  }, [countries.length, toast]);
 
   useEffect(() => {
     const text = query.trim();
     if (text.length < 2) return undefined;
     const current = ++requestId.current;
     startSearch(async () => {
-      const rows = await pickerSearchAction(text);
+      let rows;
+      try {
+        rows = await pickerSearchAction(text);
+      } catch {
+        toast.error("Search failed. Please try again.");
+        return;
+      }
       if (current === requestId.current) {
         setResults(rows);
         setSearched(true);
       }
     });
     return undefined;
-  }, [query]);
+  }, [query, toast]);
 
   /** Called by the search box once the user pauses typing. */
   function onQuery(value) {
@@ -111,7 +123,13 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels, 
 
   function select(id) {
     startLoad(async () => {
-      const details = await haribhagatDetailsAction(id);
+      let details;
+      try {
+        details = await haribhagatDetailsAction(id);
+      } catch {
+        toast.error("The Haribhagat details could not be loaded. Please try again.");
+        return;
+      }
       if (!details) return;
       setPerson(details);
       setValues(toValues(details));
