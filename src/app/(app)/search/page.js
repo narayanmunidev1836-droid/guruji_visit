@@ -5,10 +5,10 @@ import { t } from "@/lib/labels";
 import { filtersToParams, parseSearchParams, searchMemberGroups } from "@/lib/services/search";
 import { listEvents } from "@/lib/services/events";
 import { listDisks } from "@/lib/services/disks";
-import { PageHeader, EmptyState } from "@/components/ui/card";
+import { Card, EmptyState, PageHeader } from "@/components/ui/card";
 import { Pagination } from "@/components/ui/pagination";
 import { SearchForm } from "@/components/search-form";
-import { MemberResult } from "@/components/member-result";
+import { MemberResultsTable } from "@/components/member-results-table";
 
 export const metadata = { title: "Search" };
 
@@ -27,7 +27,7 @@ export default async function SearchPage({ searchParams }) {
     <div className="flex h-[calc(100dvh-11rem)] min-h-96 flex-col lg:h-[calc(100dvh-3rem)]">
       <PageHeader
         title={t("search")}
-        description="Search a Member by name, surname, village or mobile. Each Member is one result: click it to see all entries of that Member with the hard disk and path where the photos are kept."
+        description="Search a Member by name, surname, village or mobile. Each Member is one result: click a row to see all entries of that Member with the hard disk and path where the photos are kept."
       />
 
       <div className="shrink-0">
@@ -54,11 +54,9 @@ export default async function SearchPage({ searchParams }) {
                 {result.total} Member(s), {result.totalVisits} entries found
               </p>
             )}
-            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
-              {result.groups.map((group) => (
-                <MemberResult key={group.member.id} group={group} />
-              ))}
-            </div>
+            <Card className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <MemberResultsTable groups={result.groups} showMobile={allowMobile && result.groups.some((group) => group.member.mobileNo)} />
+            </Card>
             <div className="mt-3 shrink-0">
               <Pagination basePath="/search" params={params} page={result.page} pageSize={result.pageSize} total={result.total} />
             </div>
