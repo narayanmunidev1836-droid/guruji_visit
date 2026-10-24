@@ -38,7 +38,7 @@ export function ConfirmDeleteButton({ action, id, confirmText = "Delete this? Th
       type="button"
       onClick={onClick}
       disabled={pending}
-      title={label}
+      data-tip={label}
       aria-label={label}
       className={clsx("inline-grid h-8 w-8 place-items-center rounded-lg text-danger hover:bg-danger-soft disabled:opacity-60", className)}
     >

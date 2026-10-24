@@ -60,7 +60,7 @@ function PersonSearchModal({ canSeeMobile, loading, onSelect, onCreate, onClose 
   }, []);
 
   useEffect(() => {
-    if (text.length < 2) return;
+    if (text.length < 1) return;
     const current = ++requestId.current;
     startSearch(async () => {
       let rows;
@@ -79,7 +79,7 @@ function PersonSearchModal({ canSeeMobile, loading, onSelect, onCreate, onClose 
 
   function onQuery(value) {
     setQuery(value);
-    if (value.trim().length < 2) {
+    if (value.trim().length < 1) {
       requestId.current += 1; // ignore any search still in flight
       setResults([]);
       setSearched(false);
@@ -89,10 +89,10 @@ function PersonSearchModal({ canSeeMobile, loading, onSelect, onCreate, onClose 
   const showMobile = canSeeMobile && results.some((p) => p.mobileNo);
 
   return (
-    <Modal title="Select Haribhagat" onClose={onClose} wide>
-      <div ref={body}>
-        <Label>Keyword to search Haribhagat</Label>
-        <div className="relative">
+    <Modal title="Select Haribhagat" onClose={onClose} wide fixed>
+      <div ref={body} className="flex min-h-0 flex-1 flex-col">
+        <Label className="shrink-0">Keyword to search Haribhagat</Label>
+        <div className="relative shrink-0">
           <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
           <DebounceInput
             type="search"
@@ -108,16 +108,16 @@ function PersonSearchModal({ canSeeMobile, loading, onSelect, onCreate, onClose 
           {(searching || loading) && <Loader2 aria-hidden className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted" />}
         </div>
 
-        <div className="mt-4 min-h-48 overflow-x-auto rounded-xl border border-border">
-          {text.length < 2 ? (
-            <p className="px-4 py-6 text-sm text-muted">Type at least 2 letters to search.</p>
+        <div className="mt-4 min-h-0 flex-1 overflow-auto rounded-xl border border-border">
+          {text.length < 1 ? (
+            <p className="px-4 py-6 text-sm text-muted">Type a letter to search.</p>
           ) : !searched ? (
             <p className="px-4 py-6 text-sm text-muted">Searching…</p>
           ) : results.length === 0 ? (
             <p className="px-4 py-6 text-sm text-muted">No Haribhagat found for “{text}”.</p>
           ) : (
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-border bg-surface-muted text-xs uppercase tracking-wide text-muted">
+            <table className="w-full text-left text-base">
+              <thead className="sticky top-0 border-b border-border bg-surface-muted text-xs uppercase tracking-wide text-muted">
                 <tr>
                   <th className="px-4 py-2.5 font-semibold">Name</th>
                   <th className="px-4 py-2.5 font-semibold">Village</th>
@@ -129,7 +129,7 @@ function PersonSearchModal({ canSeeMobile, loading, onSelect, onCreate, onClose 
                 {results.map((p) => (
                   <tr key={p.id} onClick={() => onSelect(p.id)} className="cursor-pointer hover:bg-primary-soft">
                     <td className="px-4 py-2.5 font-medium">
-                      <button type="button" onClick={(event) => { event.stopPropagation(); onSelect(p.id); }} className="text-left text-primary hover:underline">
+                      <button type="button" onClick={(event) => { event.stopPropagation(); onSelect(p.id); }} className="text-left text-foreground hover:underline">
                         {[p.name, p.fatherName, p.surname].filter(Boolean).join(" ")}
                       </button>
                     </td>
@@ -143,7 +143,7 @@ function PersonSearchModal({ canSeeMobile, loading, onSelect, onCreate, onClose 
           )}
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-3">
+        <div className="mt-4 flex shrink-0 items-center justify-between gap-3">
           <Button type="button" variant="secondary" onClick={onClose}>
             Close
           </Button>

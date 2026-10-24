@@ -57,14 +57,16 @@ export default async function HaribhagatsPage({ searchParams }) {
   });
 
   return (
-    <>
+    // the page itself does not scroll: heading + search stay on top, only the table scrolls and the pager stays at the bottom
+    // (11rem = phone top bar + main padding incl. the bottom tab bar, 3rem = main padding on desktop)
+    <div className="flex h-[calc(100dvh-11rem)] min-h-96 flex-col lg:h-[calc(100dvh-3rem)]">
       <PageHeader
         title={t("haribhagats")}
         description="Directory of Haribhagats. Search by name, father name, surname, village, district, pincode or mobile number."
         actions={canWrite && <AddHaribhagatButton labels={labels} countries={countries} />}
       />
 
-      <GetForm action="/haribhagats" role="search" className="mb-6 flex gap-2">
+      <GetForm action="/haribhagats" role="search" className="mb-6 flex shrink-0 gap-2">
         <div className="relative flex-1">
           <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
           <DebounceInput name="q" type="search" submitOnChange defaultValue={q ?? ""} className="pl-10" placeholder="Name, surname, village, mobile…" aria-label={t("search")} />
@@ -79,8 +81,8 @@ export default async function HaribhagatsPage({ searchParams }) {
           action={canWrite ? <AddHaribhagatButton labels={labels} countries={countries} /> : null}
         />
       ) : (
-        <Card>
-          <Table>
+        <Card className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <Table scroll>
             <thead>
               <tr>
                 <Th>{t("name")}</Th>
@@ -113,11 +115,11 @@ export default async function HaribhagatsPage({ searchParams }) {
               ))}
             </tbody>
           </Table>
-          <div className="border-t border-border px-4 py-3">
+          <div className="shrink-0 border-t border-border px-4 py-3">
             <Pagination basePath="/haribhagats" params={{ q }} page={result.page} pageSize={result.pageSize} total={result.total} />
           </div>
         </Card>
       )}
-    </>
+    </div>
   );
 }

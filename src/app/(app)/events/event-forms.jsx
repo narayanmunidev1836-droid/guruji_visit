@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Pencil } from "lucide-react";
 import { createEventAction, deleteEventAction, updateEventAction } from "@/actions/events";
-import { ActionForm, Field, FormActions, SubmitButton, useFormState } from "@/components/ui/form";
+import { ActionForm, CloseWhenSaved, Field, FormActions, SubmitButton } from "@/components/ui/form";
 import { ConfirmDeleteButton } from "@/components/ui/confirm-delete-button";
 import { Input } from "@/components/ui/inputs";
 import { Modal } from "@/components/ui/modal";
@@ -20,15 +20,6 @@ export function AddEventForm({ labels }) {
       <SubmitButton>{labels.add}</SubmitButton>
     </ActionForm>
   );
-}
-
-/** Closes the edit dialog once the server says the event was saved. */
-function CloseWhenSaved({ onDone }) {
-  const { state } = useFormState();
-  useEffect(() => {
-    if (state?.ok) onDone?.();
-  }, [state, onDone]);
-  return null;
 }
 
 function EditEventForm({ event, labels, onSaved }) {
@@ -57,7 +48,7 @@ export function EventRowActions({ event, labels }) {
       <button
         type="button"
         onClick={() => setEditing(true)}
-        title={labels.edit}
+        data-tip={labels.edit}
         aria-label={labels.edit}
         className="inline-grid h-8 w-8 place-items-center rounded-lg text-primary hover:bg-primary-soft"
       >

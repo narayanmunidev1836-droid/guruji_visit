@@ -24,7 +24,13 @@ describe("roles", () => {
     expect(can({ ...staff, canCreateDisks: true }, "event.create")).toBe(false);
     expect(can({ ...staff, canCreateEvents: true }, "event.create")).toBe(true);
     expect(can({ ...staff, canCreateEvents: true }, "disk.manage")).toBe(false); // an events grant never gives disk rights
-    expect(can({ ...staff, canCreateDisks: true }, "disk.manage")).toBe(false); // adding disks does not give edit / deactivate
+  });
+
+  it("whoever may add hard disks may also edit, deactivate and delete them (disk.manage)", () => {
+    expect(can(admin, "disk.manage")).toBe(true);
+    expect(can(staff, "disk.manage")).toBe(false);
+    expect(can({ ...staff, canCreateDisks: true }, "disk.manage")).toBe(true);
+    expect(can({ ...staff, canCreateEvents: true }, "disk.manage")).toBe(false); // an events grant never gives disk rights
   });
 
   it("whoever may add events may also edit, deactivate and delete them (event.manage)", () => {
@@ -32,10 +38,11 @@ describe("roles", () => {
     expect(can(staff, "event.manage")).toBe(false);
     expect(can({ ...staff, canCreateDisks: true }, "event.manage")).toBe(false);
     expect(can({ ...staff, canCreateEvents: true }, "event.manage")).toBe(true);
+    expect(can({ ...staff, canCreateEvents: true }, "disk.manage")).toBe(false);
   });
 
-  it("only admins edit/deactivate disks, manage users and see the audit log", () => {
-    for (const p of ["disk.manage", "user.manage", "audit.view"]) {
+  it("only admins manage users and see the audit log", () => {
+    for (const p of ["user.manage", "audit.view"]) {
       expect(can(admin, p)).toBe(true);
       expect(can(staff, p)).toBe(false);
     }

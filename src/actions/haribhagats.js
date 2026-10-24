@@ -15,7 +15,7 @@ export async function pickerSearchAction(query) {
   const user = await getCurrentUser();
   if (!user || typeof query !== "string") return [];
   const text = query.trim().slice(0, 100);
-  if (text.length < 2) return [];
+  if (text.length < 1) return [];
   return pickerSearch(text, { allowMobile: canViewMobile(user, getEnv().mobileVisibleRoles) });
 }
 

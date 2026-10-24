@@ -16,14 +16,15 @@ export default async function EventsPage() {
   const labels = { name: t("eventName"), description: t("description"), add: t("add"), save: t("save"), edit: t("edit") };
 
   return (
-    <>
+    // the page itself does not scroll: heading + add form stay on top, only the table scrolls (see the Haribhagats page for the heights)
+    <div className="flex h-[calc(100dvh-11rem)] min-h-96 flex-col lg:h-[calc(100dvh-3rem)]">
       <PageHeader
         title={t("events")}
         description="Event names used in the Event Name dropdown. An event that no entry uses can be deleted."
       />
 
       {canCreate && (
-        <Card className="mb-6">
+        <Card className="mb-6 shrink-0">
           <CardHeader title="Add an event" />
           <CardBody>
             <AddEventForm labels={labels} />
@@ -34,8 +35,8 @@ export default async function EventsPage() {
       {events.length === 0 ? (
         <EmptyState title="No events yet" description={canCreate ? "Add event names (for example Pathramani, Vichran) above." : "An administrator needs to add event names (for example Pathramani, Vichran), or give you the right to."} />
       ) : (
-        <Card>
-          <Table>
+        <Card className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <Table scroll>
             <thead>
               <tr>
                 <Th>{t("eventName")}</Th>
@@ -63,6 +64,6 @@ export default async function EventsPage() {
           </Table>
         </Card>
       )}
-    </>
+    </div>
   );
 }

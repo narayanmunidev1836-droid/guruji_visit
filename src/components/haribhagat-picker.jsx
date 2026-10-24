@@ -31,7 +31,7 @@ export function HaribhagatPicker({ initial = [], initialPrimaryId = null, label,
 
   useEffect(() => {
     const text = query.trim();
-    if (text.length < 2) return undefined;
+    if (text.length < 1) return undefined;
     const current = ++requestId.current;
     startTransition(async () => {
       let rows;
@@ -112,7 +112,7 @@ export function HaribhagatPicker({ initial = [], initialPrimaryId = null, label,
           type="search"
           onDebouncedChange={(value) => {
             setQuery(value);
-            if (value.trim().length < 2) {
+            if (value.trim().length < 1) {
               requestId.current += 1; // ignore any search still in flight
               setResults([]);
               setSearched(false);

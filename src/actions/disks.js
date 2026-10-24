@@ -5,7 +5,7 @@ import { runAction } from "@/lib/action";
 import { requirePermission } from "@/lib/auth/dal";
 import { ok } from "@/lib/result";
 import { formDataToObject } from "@/lib/validation";
-import { createDisk, setDiskActive, updateDisk } from "@/lib/services/disks";
+import { createDisk, deleteDisk, setDiskActive, updateDisk } from "@/lib/services/disks";
 
 export async function createDiskAction(_prev, formData) {
   return runAction(async () => {
@@ -26,6 +26,16 @@ export async function updateDiskAction(_prev, formData) {
     revalidatePath("/hard-disks");
     revalidatePath(`/hard-disks/${input.id}`);
     return ok({ message: "Hard disk updated." });
+  });
+}
+
+export async function deleteDiskAction(id) {
+  return runAction(async () => {
+    const user = await requirePermission("disk.manage");
+    const result = await deleteDisk(user, Number(id));
+    if (!result.ok) return result;
+    revalidatePath("/hard-disks");
+    return ok();
   });
 }
 

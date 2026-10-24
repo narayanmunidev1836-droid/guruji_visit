@@ -35,12 +35,12 @@ export function HaribhagatRowActions({ person, canWrite, labels, countries }) {
   const name = [person.name, person.fatherName, person.surname].filter(Boolean).join(" ");
   return (
     <div className="flex items-center justify-end gap-0.5">
-      <Link href={`/haribhagats/${person.id}`} className={iconLink} title="View" aria-label="View">
+      <Link href={`/haribhagats/${person.id}`} className={iconLink} data-tip="View" aria-label="View">
         <Eye className="h-4 w-4" aria-hidden />
       </Link>
       {canWrite && (
         <>
-          <button type="button" onClick={() => setEditing(true)} className={iconLink} title="Edit" aria-label="Edit">
+          <button type="button" onClick={() => setEditing(true)} className={iconLink} data-tip="Edit" aria-label="Edit">
             <Pencil className="h-4 w-4" aria-hidden />
           </button>
           <ConfirmDeleteButton action={deleteHaribhagatAction} id={person.id} confirmText={`Delete ${name}? This cannot be undone.`} successMessage="Haribhagat deleted." />

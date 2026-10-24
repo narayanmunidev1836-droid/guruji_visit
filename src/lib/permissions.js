@@ -32,7 +32,7 @@ export const PERMISSIONS = {
   "event.create": [ROLES.ADMIN], // staff only when an administrator granted it (GRANTS below)
   "event.manage": [ROLES.ADMIN], // edit / deactivate / delete an event: same people as event.create (GRANTS below)
   "disk.create": [ROLES.ADMIN], // staff only when an administrator granted it (GRANTS below)
-  "disk.manage": [ROLES.ADMIN],
+  "disk.manage": [ROLES.ADMIN], // edit / deactivate / delete a disk: same people as disk.create (GRANTS below)
   "user.manage": [ROLES.ADMIN],
   "audit.view": [ROLES.ADMIN],
 };
@@ -40,6 +40,7 @@ export const PERMISSIONS = {
 /** Permissions an administrator can give to a single user: permission -> the flag on the user record. */
 export const GRANTS = {
   "disk.create": "canCreateDisks",
+  "disk.manage": "canCreateDisks", // whoever may add disks may also edit, deactivate and delete them
   "event.create": "canCreateEvents",
   "event.manage": "canCreateEvents", // whoever may add events may also edit, deactivate and delete them
 };

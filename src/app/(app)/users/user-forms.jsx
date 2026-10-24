@@ -77,7 +77,7 @@ export function UserRowActions({ user, labels }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        title={labels.edit}
+        data-tip={labels.edit}
         aria-label={labels.edit}
         className="inline-grid h-8 w-8 place-items-center rounded-lg text-primary hover:bg-primary-soft"
       >

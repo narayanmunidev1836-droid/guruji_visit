@@ -13,6 +13,15 @@ export function useFormState() {
   return useContext(FormStateContext);
 }
 
+/** Put inside an ActionForm shown in a dialog: calls `onDone` once the server says the form was saved. */
+export function CloseWhenSaved({ onDone }) {
+  const { state } = useFormState();
+  useEffect(() => {
+    if (state?.ok) onDone?.();
+  }, [state, onDone]);
+  return null;
+}
+
 /**
  * Form wired to a server action (signature: (prevState, formData) => result).
  * - Submits through startTransition instead of <form action> so React does NOT clear the inputs after a

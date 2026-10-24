@@ -193,3 +193,33 @@ body {
     color: var(--ring);
   }
 }
+
+/* Instant tooltip for icon-only buttons: <button data-tip="Edit" aria-label="Edit">. It sits above the icon, right edges aligned, so it
+   never sticks out to the right of a scrolling table (which would add a horizontal scrollbar). */
+[data-tip] {
+  position: relative;
+}
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 30;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #1e293b;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+[data-tip]:hover::after,
+[data-tip]:focus-visible::after {
+  opacity: 1;
+  transform: none;
+}

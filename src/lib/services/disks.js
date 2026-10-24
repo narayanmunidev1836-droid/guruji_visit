@@ -31,12 +31,15 @@ export async function listDisksForSelect(currentDiskId) {
   });
 }
 
-export async function listDisks() {
-  const disks = await db.hardDisk.findMany({
+/** All disks (active first); `q` keeps those whose label, description, serial number or notes contain the text. */
+export async function listDisks(q) {
+  const text = String(q ?? "").trim().slice(0, 100);
+  const contains = { contains: text, mode: "insensitive" };
+  return db.hardDisk.findMany({
+    where: text ? { OR: [{ labelName: contains }, { description: contains }, { serialNumber: contains }, { notes: contains }] } : undefined,
     orderBy: [{ isActive: "desc" }, { labelName: "asc" }],
     include: { _count: { select: { visits: true } } },
   });
-  return disks;
 }
 
 export async function getDisk(id) {
@@ -85,6 +88,19 @@ export async function updateDisk(actor, id, input) {
     if (isUniqueViolation(error)) return fail("Another hard disk already uses this label.", { labelName: "Already exists." });
     throw error;
   }
+}
+
+/** Deletes a disk that no entry uses (a mistaken registration). A disk with entries can only be deactivated. */
+export async function deleteDisk(actor, id) {
+  const disk = await db.hardDisk.findUnique({ where: { id }, include: { _count: { select: { visits: true } } } });
+  if (!disk) return fail("Hard disk not found.");
+  const count = disk._count.visits;
+  if (count > 0) {
+    return fail(`"${disk.labelName}" is used in ${count} ${count === 1 ? "entry" : "entries"}, so it cannot be deleted. Deactivate it instead.`);
+  }
+  await db.hardDisk.delete({ where: { id } });
+  await audit(actor, "disk.delete", "HardDisk", id, { labelName: disk.labelName });
+  return ok();
 }
 
 /** Disks referenced by visits are deactivated, never deleted. */
