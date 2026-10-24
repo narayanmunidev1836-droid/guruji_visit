@@ -16,7 +16,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { Table, Td, Th } from "@/components/ui/table";
 import { AddHaribhagatButton, HaribhagatRowActions } from "@/components/haribhagat-actions";
 
-export const metadata = { title: "Haribhagats" };
+export const metadata = { title: "Members" };
 
 export default async function HaribhagatsPage({ searchParams }) {
   const user = await requireUser();
@@ -62,7 +62,7 @@ export default async function HaribhagatsPage({ searchParams }) {
     <div className="flex h-[calc(100dvh-11rem)] min-h-96 flex-col lg:h-[calc(100dvh-3rem)]">
       <PageHeader
         title={t("haribhagats")}
-        description="Directory of Haribhagats. Search by name, father name, surname, village, district, pincode or mobile number."
+        description="Directory of Members. Search by name, father name, surname, village, district, pincode or mobile number."
         actions={canWrite && <AddHaribhagatButton labels={labels} countries={countries} />}
       />
 
@@ -77,7 +77,7 @@ export default async function HaribhagatsPage({ searchParams }) {
       {result.items.length === 0 ? (
         <EmptyState
           title={t("noResults")}
-          description={q ? "Check the spelling or search with fewer words." : "No Haribhagat has been added yet."}
+          description={q ? "Check the spelling or search with fewer words." : "No Member has been added yet."}
           action={canWrite ? <AddHaribhagatButton labels={labels} countries={countries} /> : null}
         />
       ) : (

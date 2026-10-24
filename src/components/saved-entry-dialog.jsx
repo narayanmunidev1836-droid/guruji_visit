@@ -60,7 +60,7 @@ export function SavedEntryDialog({ onClose }) {
         <p className="mt-1 text-sm text-muted">Please check the details below. If something is wrong, choose Edit.</p>
 
         <dl className="mt-4 divide-y divide-border rounded-xl border border-border px-4">
-          <Row label="Haribhagat">
+          <Row label="Member">
             {saved.people.map((person) => (
               <div key={person.id} className="py-0.5">
                 <p className="font-medium">{[person.name, person.fatherName, person.surname].filter(Boolean).join(" ")}</p>

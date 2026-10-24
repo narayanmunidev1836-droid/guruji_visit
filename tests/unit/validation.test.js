@@ -52,7 +52,7 @@ describe("visit validation", () => {
   });
 
   it("requires a Haribhagat and a hard disk", () => {
-    expect(validate(visitSchema, { ...valid, haribhagatIds: [] }).fieldErrors.haribhagatIds).toBe("Choose at least one Haribhagat.");
+    expect(validate(visitSchema, { ...valid, haribhagatIds: [] }).fieldErrors.haribhagatIds).toBe("Choose at least one Member.");
     expect(validate(visitSchema, { ...valid, hardDiskId: "" }).fieldErrors.hardDiskId).toBeTruthy();
   });
 

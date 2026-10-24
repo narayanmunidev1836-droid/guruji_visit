@@ -121,7 +121,7 @@ export function HaribhagatPicker({ initial = [], initialPrimaryId = null, label,
           onKeyDown={(e) => {
             if (e.key === "Enter") e.preventDefault(); // Enter must not submit the visit form
           }}
-          placeholder="Type name, surname or village to find a Haribhagat…"
+          placeholder="Type name, surname or village to find a Member…"
           className="pl-10"
           autoComplete="off"
           aria-label={label}
@@ -150,7 +150,7 @@ export function HaribhagatPicker({ initial = [], initialPrimaryId = null, label,
               </li>
             );
           })}
-          {searched && results.length === 0 && <li className="px-3 py-2 text-sm text-muted">No matching Haribhagat found.</li>}
+          {searched && results.length === 0 && <li className="px-3 py-2 text-sm text-muted">No matching Member found.</li>}
         </ul>
       )}
       <p className="mt-2 text-xs text-muted" aria-live="polite">

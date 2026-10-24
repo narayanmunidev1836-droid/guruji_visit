@@ -55,7 +55,7 @@ The build downloads Google Fonts (Geist, Noto Sans Gujarati), so the VPS needs o
 ### systemd service `/etc/systemd/system/guruji.service`
 ```ini
 [Unit]
-Description=Guruji Photo Archive
+Description=Sankardham
 After=network.target postgresql.service
 
 [Service]

@@ -64,7 +64,7 @@ export default async function HardDiskPage({ params }) {
       </div>
 
       <Card className="mt-6">
-        <CardHeader title="Visits stored on this disk" description="Path and Haribhagat of every visit that uses this disk." />
+        <CardHeader title="Visits stored on this disk" description="Path and Member of every visit that uses this disk." />
         {visits.items.length === 0 ? (
           <CardBody>
             <EmptyState title="No visits use this disk yet" />

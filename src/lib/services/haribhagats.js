@@ -71,7 +71,7 @@ export async function createHaribhagat(actor, input, { confirmDuplicate = false 
   if (!confirmDuplicate) {
     const duplicates = await findPossibleDuplicates(data);
     if (duplicates.length > 0) {
-      return fail("A similar Haribhagat already exists. Check before creating a new record.", {}, { duplicates });
+      return fail("A similar Member already exists. Check before creating a new record.", {}, { duplicates });
     }
   }
 
@@ -92,13 +92,13 @@ export async function updateHaribhagat(actor, id, input, { confirmDuplicate = fa
   const data = parsed.data;
 
   const current = await db.haribhagat.findUnique({ where: { id } });
-  if (!current) return fail("Haribhagat not found.");
+  if (!current) return fail("Member not found.");
   if (!canEditMobile) data.mobileNo = current.mobileNo;
 
   if (!confirmDuplicate) {
     const duplicates = await findPossibleDuplicates(data, { excludeId: id });
     if (duplicates.length > 0) {
-      return fail("Another similar Haribhagat already exists. Check before saving.", {}, { duplicates });
+      return fail("Another similar Member already exists. Check before saving.", {}, { duplicates });
     }
   }
 
@@ -113,7 +113,7 @@ export async function updateHaribhagat(actor, id, input, { confirmDuplicate = fa
  */
 export async function deleteHaribhagat(actor, id) {
   const person = await db.haribhagat.findUnique({ where: { id }, include: { _count: { select: { visits: true } } } });
-  if (!person) return fail("Haribhagat not found.");
+  if (!person) return fail("Member not found.");
   const count = person._count.visits;
   if (count > 0) {
     return fail(`${person.name} ${person.surname} is used in ${count} ${count === 1 ? "entry" : "entries"}. Delete or change those entries first.`);

@@ -21,7 +21,7 @@ export function AddHaribhagatButton({ labels, countries, variant = "primary" }) 
         {labels.add}
       </Button>
       {open && (
-        <Modal title="New Haribhagat" onClose={() => setOpen(false)}>
+        <Modal title="New Member" onClose={() => setOpen(false)}>
           <HaribhagatForm modal labels={labels} countries={countries} onDone={() => setOpen(false)} onCancel={() => setOpen(false)} />
         </Modal>
       )}
@@ -43,7 +43,7 @@ export function HaribhagatRowActions({ person, canWrite, labels, countries }) {
           <button type="button" onClick={() => setEditing(true)} className={iconLink} data-tip="Edit" aria-label="Edit">
             <Pencil className="h-4 w-4" aria-hidden />
           </button>
-          <ConfirmDeleteButton action={deleteHaribhagatAction} id={person.id} confirmText={`Delete ${name}? This cannot be undone.`} successMessage="Haribhagat deleted." />
+          <ConfirmDeleteButton action={deleteMemberAction} id={person.id} confirmText={`Delete ${name}? This cannot be undone.`} successMessage="Member deleted." />
         </>
       )}
       {editing && (

@@ -1,4 +1,4 @@
-# Guruji Photo Archive
+# Sankardham
 
 A private, searchable archive for Guruji's Pathramani, Vichran and other event photographs.
 The **original photos stay on the USB hard disks**; this web app stores only searchable metadata and the exact

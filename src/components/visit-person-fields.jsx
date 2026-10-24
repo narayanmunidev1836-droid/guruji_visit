@@ -89,9 +89,9 @@ function PersonSearchModal({ canSeeMobile, loading, onSelect, onCreate, onClose 
   const showMobile = canSeeMobile && results.some((p) => p.mobileNo);
 
   return (
-    <Modal title="Select Haribhagat" onClose={onClose} wide fixed>
+    <Modal title="Select Member" onClose={onClose} wide fixed>
       <div ref={body} className="flex min-h-0 flex-1 flex-col">
-        <Label className="shrink-0">Keyword to search Haribhagat</Label>
+        <Label className="shrink-0">Keyword to search Member</Label>
         <div className="relative shrink-0">
           <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
           <DebounceInput
@@ -102,7 +102,7 @@ function PersonSearchModal({ canSeeMobile, loading, onSelect, onCreate, onClose 
             }}
             placeholder="Name, father name, surname, village or mobile…"
             className="pl-10"
-            aria-label="Search Haribhagat"
+            aria-label="Search Member"
             autoComplete="off"
           />
           {(searching || loading) && <Loader2 aria-hidden className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted" />}
@@ -114,7 +114,7 @@ function PersonSearchModal({ canSeeMobile, loading, onSelect, onCreate, onClose 
           ) : !searched ? (
             <p className="px-4 py-6 text-sm text-muted">Searching…</p>
           ) : results.length === 0 ? (
-            <p className="px-4 py-6 text-sm text-muted">No Haribhagat found for “{text}”.</p>
+            <p className="px-4 py-6 text-sm text-muted">No Member found for “{text}”.</p>
           ) : (
             <table className="w-full text-left text-base">
               <thead className="sticky top-0 border-b border-border bg-surface-muted text-xs uppercase tracking-wide text-muted">
@@ -211,7 +211,7 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels, 
       try {
         details = await haribhagatDetailsAction(id);
       } catch {
-        toast.error("The Haribhagat details could not be loaded. Please try again.");
+        toast.error("The Member details could not be loaded. Please try again.");
         return;
       }
       if (!details) return;
@@ -255,7 +255,7 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels, 
         <div className="flex gap-2">
           <Button type="button" variant="secondary" className="flex-1 justify-start font-normal text-muted" onClick={() => setSearchOpen(true)}>
             <Search className="h-4 w-4 shrink-0" aria-hidden />
-            <span className="truncate">Search an existing Haribhagat by name, surname, village or mobile…</span>
+            <span className="truncate">Search an existing Member by name, surname, village or mobile…</span>
           </Button>
           {locked && (
             <Button type="button" variant="secondary" onClick={clear}>

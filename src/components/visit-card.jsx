@@ -36,24 +36,47 @@ export function VisitLocation({ visit, copy = true }) {
 
 const iconLink = "inline-grid h-8 w-8 place-items-center rounded-lg text-primary hover:bg-primary-soft";
 
-/** One entry: who, where the photos are kept (disk + path), event / date / place and notes; View / Edit / Delete when allowed. */
-export function VisitCard({ visit, canEdit = false }) {
-  const people = visit.haribhagats;
-  const place = [people[0]?.haribhagat.gam, people[0]?.haribhagat.jillo].filter(Boolean).join(", ");
+/**
+ * One entry: who, where the photos are kept (disk + path), event / date / place and notes; View / Edit / Delete when allowed.
+ * `hidePersonId`: on that Member's own page their name and village are left out (only the other people of a shared entry are named).
+ */
+export function VisitCard({ visit, canEdit = false, hidePersonId = null }) {
+  const people = visit.haribhagats.filter((link) => link.haribhagat.id !== hidePersonId);
+  const place = hidePersonId ? "" : [people[0]?.haribhagat.gam, people[0]?.haribhagat.jillo].filter(Boolean).join(", ");
+  const hasMeta = Boolean(visit.event || visit.visitDate || visit.placeType);
+  const meta = hasMeta && (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-muted">
+      {visit.event && <Badge tone="primary">{visit.event.name}</Badge>}
+      {visit.visitDate && (
+        <span className="inline-flex items-center gap-1.5">
+          <CalendarDays className="h-4 w-4" aria-hidden /> {formatDate(visit.visitDate)}
+        </span>
+      )}
+      {visit.placeType && (
+        <span className="inline-flex items-center gap-1.5">
+          <MapPin className="h-4 w-4" aria-hidden /> {t(visit.placeType)}
+        </span>
+      )}
+    </div>
+  );
+  const metaOnTop = hasMeta && people.length === 0; // nobody to name: the event / date take the top-left spot
   return (
     <article className="card-hover flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-base font-semibold leading-snug">
-            {people.map((link, index) => (
-              <span key={link.haribhagat.id}>
-                {index > 0 && ", "}
-                <Link href={`/haribhagats/${link.haribhagat.id}`} className="hover:text-primary hover:underline">
-                  {personName(link.haribhagat)}
-                </Link>
-              </span>
-            ))}
-          </p>
+          {metaOnTop && meta}
+          {people.length > 0 && (
+            <p className="text-base font-semibold leading-snug">
+              {people.map((link, index) => (
+                <span key={link.haribhagat.id}>
+                  {index > 0 && ", "}
+                  <Link href={`/haribhagats/${link.haribhagat.id}`} className="hover:text-primary hover:underline">
+                    {personName(link.haribhagat)}
+                  </Link>
+                </span>
+              ))}
+            </p>
+          )}
           {place && (
             <p className="mt-0.5 flex items-center gap-1 text-xs text-muted">
               <MapPin className="h-3 w-3 shrink-0" aria-hidden />
@@ -61,7 +84,7 @@ export function VisitCard({ visit, canEdit = false }) {
             </p>
           )}
         </div>
-        <div className="flex shrink-0 items-center gap-0.5 rounded-xl border border-border bg-surface p-0.5">
+        <div className="ml-auto flex shrink-0 items-center gap-0.5 rounded-xl border border-border bg-surface p-0.5">
           <Link href={`/visits/${visit.id}`} className={iconLink} title="View" aria-label="View">
             <Eye className="h-4 w-4" aria-hidden />
           </Link>
@@ -78,21 +101,7 @@ export function VisitCard({ visit, canEdit = false }) {
 
       <VisitLocation visit={visit} />
 
-      {(visit.event || visit.visitDate || visit.placeType) && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-muted">
-          {visit.event && <Badge tone="primary">{visit.event.name}</Badge>}
-          {visit.visitDate && (
-            <span className="inline-flex items-center gap-1.5">
-              <CalendarDays className="h-4 w-4" aria-hidden /> {formatDate(visit.visitDate)}
-            </span>
-          )}
-          {visit.placeType && (
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin className="h-4 w-4" aria-hidden /> {t(visit.placeType)}
-            </span>
-          )}
-        </div>
-      )}
+      {!metaOnTop && meta}
 
       {visit.notes && (
         <p className="flex items-start gap-2 whitespace-pre-line border-t border-border pt-3 text-sm text-foreground/80">

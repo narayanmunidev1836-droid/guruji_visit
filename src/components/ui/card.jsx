@@ -1,5 +1,6 @@
 import Link from "next/link";
 import clsx from "clsx";
+import { BackButton } from "@/components/ui/back-button";
 
 export function Card({ className, children, ...props }) {
   return (
@@ -30,9 +31,7 @@ export function PageHeader({ title, description, actions, backHref, backLabel })
     <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
       <div className="min-w-0">
         {backHref && (
-          <Link href={backHref} className="mb-1 inline-block text-sm text-muted hover:text-foreground">
-            ← {backLabel ?? "Back"}
-          </Link>
+          <BackButton href={backHref} label={backLabel} />
         )}
         <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
         {description && <p className="mt-1 max-w-2xl text-sm text-muted">{description}</p>}

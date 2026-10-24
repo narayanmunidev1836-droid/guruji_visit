@@ -4,7 +4,7 @@ const DICTIONARY = {
   // navigation
   dashboard: "Dashboard",
   search: "Search",
-  haribhagats: "Haribhagats",
+  haribhagats: "Members",
   events: "Events",
   hardDisks: "Hard Disks",
   scans: "Scans",

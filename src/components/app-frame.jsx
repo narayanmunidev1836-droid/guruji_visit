@@ -32,7 +32,7 @@ function Brand() {
       <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand text-primary-foreground shadow-brand">
         <Images className="h-[18px] w-[18px]" />
       </span>
-      <span className="bg-gradient-to-r from-brand-from to-brand-to bg-clip-text text-base font-bold text-transparent">Guruji Photo Archive</span>
+      <span className="bg-gradient-to-r from-brand-from to-brand-to bg-clip-text text-base font-bold text-transparent">Sankardham</span>
     </Link>
   );
 }

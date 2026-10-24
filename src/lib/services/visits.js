@@ -15,8 +15,8 @@ const idList = z.preprocess(
   (v) => (Array.isArray(v) ? v : v === undefined || v === null || v === "" ? [] : [v]),
   z
     .array(z.coerce.number().int().positive())
-    .min(1, "Choose at least one Haribhagat.")
-    .max(MAX_PEOPLE, `At most ${MAX_PEOPLE} Haribhagats per visit.`),
+    .min(1, "Choose at least one Member.")
+    .max(MAX_PEOPLE, `At most ${MAX_PEOPLE} Members per visit.`),
 );
 
 /** Required date: empty or invalid -> error. */
@@ -67,7 +67,7 @@ export function parseVisitFolder(input) {
 async function resolveHaribhagatLinks(data) {
   const ids = [...new Set(data.haribhagatIds)];
   const found = await db.haribhagat.findMany({ where: { id: { in: ids } }, select: { id: true } });
-  if (found.length !== ids.length) return fail("One of the selected Haribhagats no longer exists.", { haribhagatIds: "Invalid selection." });
+  if (found.length !== ids.length) return fail("One of the selected Members no longer exists.", { haribhagatIds: "Invalid selection." });
   const primary = data.primaryHaribhagatId && ids.includes(data.primaryHaribhagatId) ? data.primaryHaribhagatId : ids[0];
   return { ok: true, links: ids.map((haribhagatId) => ({ haribhagatId, isPrimary: haribhagatId === primary })) };
 }
@@ -119,7 +119,7 @@ export async function createVisit(actor, input, { confirmDuplicate = false, canE
   if (newPerson) {
     if (!confirmDuplicate) {
       const duplicates = await findPossibleDuplicates(personData);
-      if (duplicates.length > 0) return fail("A similar Haribhagat already exists. Choose that person, or save a new one anyway.", {}, { duplicates });
+      if (duplicates.length > 0) return fail("A similar Member already exists. Choose that person, or save a new one anyway.", {}, { duplicates });
     }
   } else {
     const linked = await resolveHaribhagatLinks(data);

@@ -47,7 +47,7 @@ function VisitFormFields({ visit, events, disks, placeTypes, selectedPeople, ini
             initial={selectedPeople}
             initialPrimaryId={visit?.primaryId ?? null}
             label={`1. ${labels.haribhagats}`}
-            newPersonLabel="Add a new Haribhagat"
+            newPersonLabel="Add a new Member"
           />
         ) : (
           <VisitPersonFields initialPerson={initialPerson ?? null} canSeeMobile={canSeeMobile} countries={countries} labels={{ ...labels, haribhagats: `1. ${labels.haribhagats}` }} />

@@ -6,7 +6,7 @@ import { listCountries } from "@/lib/services/countries";
 import { PageHeader, Card, CardBody } from "@/components/ui/card";
 import { HaribhagatForm } from "@/components/haribhagat-form";
 
-export const metadata = { title: "New Haribhagat" };
+export const metadata = { title: "New Member" };
 
 export default async function NewHaribhagatPage({ searchParams }) {
   const user = await requireUser();
@@ -17,7 +17,7 @@ export default async function NewHaribhagatPage({ searchParams }) {
 
   return (
     <>
-      <PageHeader backHref="/haribhagats" backLabel={t("haribhagats")} title="New Haribhagat" description="Check the directory first - similar records are shown before a new one is created." />
+      <PageHeader backHref="/haribhagats" backLabel={t("haribhagats")} title="New Member" description="Check the directory first - similar records are shown before a new one is created." />
       <Card className="max-w-3xl">
         <CardBody>
           <HaribhagatForm

@@ -16,7 +16,7 @@ async function RedirectIfSignedIn() {
 const FEATURES = [
   { icon: Images, title: "Every visit recorded:", text: "who came, when, and for which event" },
   { icon: HardDrive, title: "Hard disk and path:", text: "know exactly which disk to connect and where to look" },
-  { icon: Search, title: "Quick search:", text: "by Haribhagat name, village, mobile, date or event" },
+  { icon: Search, title: "Quick search:", text: "by Member name, village, mobile, date or event" },
 ];
 
 // Centered card on a blurred temple photo: photo + branding on the left (desktop), sign-in form on the right.
@@ -40,10 +40,10 @@ export default function LoginPage() {
               <Image src="/images/gurukul-logo.png" alt="Sanskardham Gurukul, Dhrangadhra" width={632} height={90} className="h-9 w-auto" />
             </span>
             <h1 className="mt-6 text-3xl font-bold leading-tight lg:text-4xl">
-              Guruji <span className="text-[#f0d0b8]">Photo Archive</span>
+              Sankardham
             </h1>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-[#fff5f0]/90">
-              Find out which hard disk and path hold the photos of every Haribhagat&apos;s visit: Pathramani, Vichran, Sabha, Utsav.
+              Find out which hard disk and path hold the photos of every Member&apos;s visit: Pathramani, Vichran, Sabha, Utsav.
             </p>
           </div>
 

@@ -7,7 +7,7 @@ import { getHaribhagat } from "@/lib/services/haribhagats";
 import { Card, CardBody, PageHeader } from "@/components/ui/card";
 import { HaribhagatForm } from "@/components/haribhagat-form";
 
-export const metadata = { title: "Edit Haribhagat" };
+export const metadata = { title: "Edit Member" };
 
 export default async function EditHaribhagatPage({ params }) {
   const user = await requireUser();

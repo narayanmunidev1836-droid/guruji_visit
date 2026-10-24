@@ -63,7 +63,7 @@ test.describe("Haribhagat directory", () => {
     await page.goto("/haribhagats/new");
     await fill(page, { ...person, Name: " hitesh ", Surname: surname.toUpperCase() });
     await page.getByRole("button", { name: /^Save/ }).click();
-    const warning = page.locator('div[role="alert"]', { hasText: /similar Haribhagat already exists/ });
+    const warning = page.locator('div[role="alert"]', { hasText: /similar Member already exists/ });
     await expect(warning).toBeVisible();
     await expect(warning.getByRole("link", { name: /Open existing record/ })).toBeVisible();
     await expect(page).toHaveURL(/\/haribhagats\/new/);

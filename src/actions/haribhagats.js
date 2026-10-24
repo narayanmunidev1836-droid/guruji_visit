@@ -65,7 +65,7 @@ export async function saveHaribhagatAction(_prev, formData) {
 
     revalidatePath("/haribhagats");
     revalidatePath(`/haribhagats/${result.person.id}`);
-    if (input.modal === "1") return ok({ saved: true, message: id ? "Haribhagat updated." : "Haribhagat added." }); // saved from the dialog on the list: it closes itself, no page change
+    if (input.modal === "1") return ok({ saved: true, message: id ? "Member updated." : "Member added." }); // saved from the dialog on the list: it closes itself, no page change
     const returnTo = typeof input.returnTo === "string" && input.returnTo.startsWith("/") && !input.returnTo.startsWith("//") ? input.returnTo : null;
     redirect(returnTo ?? `/haribhagats/${result.person.id}`);
   });

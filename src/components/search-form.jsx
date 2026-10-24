@@ -39,7 +39,7 @@ export function SearchForm({ values, events, disks, allowMobile }) {
             type="search"
             submitOnChange
             defaultValue={values.q ?? ""}
-            placeholder="Search a Haribhagat: name, surname, village, mobile, disk, path…"
+            placeholder="Search a Member: name, surname, village, mobile, disk, path…"
             className="pl-10"
             aria-label={t("search")}
           />

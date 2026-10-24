@@ -199,3 +199,80 @@ export async function searchVisits(user, filters) {
   if (similarTotal === 0) return found;
   return { ...found, items: similarItems, total: similarTotal, loose: true, totalPages: Math.max(1, Math.ceil(similarTotal / pageSize)) };
 }
+
+const GROUP_SCAN_LIMIT = 20000;
+
+/**
+ * Groups the visits matching `where` by Member and returns one page of GROUPS (not of visits): `groups` = [{ member, count }] with the
+ * number of matching entries, `total` = number of members, `totalVisits` = number of distinct visits. Only ids / dates are scanned;
+ * the entries themselves are shown on the Member's own page. `memberIds` (when given) limits which people of a visit form a group,
+ * so "PATEL" does not also list the other people of a shared visit. Latest mode orders members by their newest created entry,
+ * search mode by their newest visit date (empty dates last).
+ */
+async function groupVisits({ where, memberIds, latest, page }) {
+  const pageSize = latest ? LATEST_PAGE_SIZE : SEARCH_PAGE_SIZE;
+  const allowed = memberIds ? new Set(memberIds) : null;
+  const rows = await db.visit.findMany({
+    where,
+    select: { id: true, visitDate: true, createdAt: true, haribhagats: { select: { haribhagatId: true } } },
+    take: GROUP_SCAN_LIMIT,
+  });
+
+  const byMember = new Map();
+  const visitIds = new Set();
+  for (const row of rows) {
+    const stamp = latest ? row.createdAt.getTime() : row.visitDate ? row.visitDate.getTime() : -Infinity;
+    for (const { haribhagatId } of row.haribhagats) {
+      if (allowed && !allowed.has(haribhagatId)) continue;
+      const group = byMember.get(haribhagatId) ?? { memberId: haribhagatId, visitIds: [], newest: -Infinity, newestVisitId: 0 };
+      group.visitIds.push(row.id);
+      visitIds.add(row.id);
+      if (stamp > group.newest || (stamp === group.newest && row.id > group.newestVisitId)) {
+        group.newest = stamp;
+        group.newestVisitId = row.id;
+      }
+      byMember.set(haribhagatId, group);
+    }
+  }
+
+  const ordered = [...byMember.values()].sort((a, b) => b.newest - a.newest || b.newestVisitId - a.newestVisitId);
+  const pageGroups = ordered.slice((page - 1) * pageSize, page * pageSize);
+  const members = pageGroups.length
+    ? await db.haribhagat.findMany({
+        where: { id: { in: pageGroups.map((group) => group.memberId) } },
+        select: { id: true, name: true, fatherName: true, surname: true, gam: true, taluko: true, jillo: true },
+      })
+    : [];
+  const memberById = new Map(members.map((member) => [member.id, member]));
+  const groups = pageGroups.map((group) => ({ member: memberById.get(group.memberId), count: group.visitIds.length })).filter((group) => group.member);
+
+  return { groups, total: ordered.length, totalVisits: visitIds.size, page, pageSize, totalPages: Math.max(1, Math.ceil(ordered.length / pageSize)) };
+}
+
+/**
+ * The search page: the same matching as searchVisits(), but grouped by Member - a Member with 10 entries is ONE result; clicking it
+ * opens the Member's page with all entries. Pages count Members (latest mode 10, search 20). `latest` / `loose` mean the same as in searchVisits().
+ */
+export async function searchMemberGroups(user, filters) {
+  const allowMobile = canViewMobile(user, getEnv().mobileVisibleRoles);
+  const page = filters.page ?? 1;
+  if (!hasSearchFilters(filters)) return { ...(await groupVisits({ where: {}, memberIds: null, latest: true, page })), latest: true, loose: false };
+
+  // Typed person fields (and a chosen Member) decide which people of a visit form a group.
+  const { q, ...fieldFilters } = filters;
+  void q;
+  const memberAnd = [];
+  const personWhere = buildPersonWhere(fieldFilters, { allowMobile });
+  if (personWhere) memberAnd.push(personWhere);
+  if (filters.haribhagatId) memberAnd.push({ id: filters.haribhagatId });
+  const memberIds = memberAnd.length ? (await db.haribhagat.findMany({ where: { AND: memberAnd }, select: { id: true } })).map((row) => row.id) : null;
+
+  const found = { ...(await groupVisits({ where: buildVisitWhere(filters, { allowMobile }), memberIds, latest: false, page })), latest: false, loose: false };
+  if (found.total > 0 || !LOOSE_FIELDS.some((field) => normalizeText(filters[field]))) return found;
+
+  const ids = await looseHaribhagatIds(filters, { allowMobile });
+  if (ids.length === 0) return found;
+  const others = buildVisitWhere({ ...filters, q: null, name: null, fatherName: null, surname: null, gam: null, taluko: null, jillo: null, pincode: null, mobileNo: null }, { allowMobile });
+  const similar = await groupVisits({ where: others, memberIds: ids, latest: false, page });
+  return similar.total === 0 ? found : { ...similar, latest: false, loose: true };
+}

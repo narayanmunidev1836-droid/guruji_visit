@@ -37,7 +37,7 @@ export default async function DashboardPage() {
             <p className="text-sm font-medium text-[#fde8e0]/90">Welcome, {user.name}</p>
             <h1 className="mt-1 text-2xl font-bold lg:text-3xl">{t("dashboard")}</h1>
             <p className="mt-1 text-sm text-[#fff5f0]/80">
-              {formatNumber(data.haribhagatCount)} Haribhagats · {formatNumber(data.visitCount)} visits · {formatNumber(data.diskCount)} hard disks
+              {formatNumber(data.haribhagatCount)} Members · {formatNumber(data.visitCount)} visits · {formatNumber(data.diskCount)} hard disks
             </p>
           </div>
           {can(user, "visit.write") && (
@@ -54,7 +54,7 @@ export default async function DashboardPage() {
           <Input
             name="q"
             type="search"
-            placeholder="Search a Haribhagat: name, surname, village, mobile…"
+            placeholder="Search a Member: name, surname, village, mobile…"
             className="h-12 pl-10 text-base"
             aria-label={t("search")}
           />
@@ -132,7 +132,7 @@ export default async function DashboardPage() {
             </Link>
           </div>
           {data.recentVisits.length === 0 ? (
-            <EmptyState title="No visits yet" description="Add a visit to record which hard disk and path hold a Haribhagat's photos." />
+            <EmptyState title="No visits yet" description="Add a visit to record which hard disk and path hold a Member's photos." />
           ) : (
             <div className="space-y-4">
               {data.recentVisits.map((visit) => (
