@@ -8,7 +8,7 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 const notoGujarati = Noto_Sans_Gujarati({ variable: "--font-gujarati", subsets: ["gujarati", "latin"], display: "swap" });
 
 export const metadata = {
-  title: { default: "Sankardham", template: "%s | Sankardham" },
+  title: { default: "Sanskardham Archive", template: "%s | Sanskardham Archive" },
   description: "Searchable archive of Pathramani, Vichran and event photographs stored on USB hard disks.",
   robots: { index: false, follow: false },
 };

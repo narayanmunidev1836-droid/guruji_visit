@@ -40,7 +40,7 @@ export default function LoginPage() {
               <Image src="/images/gurukul-logo.png" alt="Sanskardham Gurukul, Dhrangadhra" width={632} height={90} className="h-9 w-auto" />
             </span>
             <h1 className="mt-6 text-3xl font-bold leading-tight lg:text-4xl">
-              Sankardham
+              Sanskardham Archive
             </h1>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-[#fff5f0]/90">
               Find out which hard disk and path hold the photos of every Member&apos;s visit: Pathramani, Vichran, Sabha, Utsav.

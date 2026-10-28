@@ -1,4 +1,4 @@
-# CLAUDE.md — Sankardham (read this first)
+# CLAUDE.md — Sanskardham Archive (read this first)
 
 Private web app that records **which hard disk and folder hold the photos of each Haribhagat's visit** (Pathramani, Vichran, Sabha, Utsav …).
 **Photos stay on USB hard disks** (each with a unique sticker label such as `HDD-001`). Nothing is indexed or scanned: staff type the
