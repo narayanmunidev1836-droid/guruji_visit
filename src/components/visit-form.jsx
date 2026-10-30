@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import clsx from "clsx";
 import { createVisitAction, updateVisitAction } from "@/actions/visits";
 import { ActionForm, Field, FormActions, SubmitButton } from "@/components/ui/form";
 import { buttonClasses } from "@/components/ui/button";
@@ -12,6 +13,9 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { HaribhagatPicker } from "@/components/haribhagat-picker";
 import { SavedEntryDialog } from "@/components/saved-entry-dialog";
 import { VisitPersonFields } from "@/components/visit-person-fields";
+
+// the form is two boxes: the Member, then where / what the entry is (date, event, place, disk, path, notes)
+const sectionBox = "rounded-2xl border border-border bg-surface-muted/50 p-3";
 
 /**
  * Create / edit a visit: Haribhagat(s) + the hard disk and folder where their photos are kept.
@@ -41,7 +45,8 @@ function VisitFormFields({ visit, events, disks, placeTypes, selectedPeople, ini
       {editing && <input type="hidden" name="id" value={visit.id} />}
       {!editing && <SavedEntryDialog onClose={onNewEntry} />}
 
-      <div className="space-y-3">
+      <div className="space-y-4">
+        <div className={sectionBox}>
         {editing ? (
           <HaribhagatPicker
             initial={selectedPeople}
@@ -52,7 +57,9 @@ function VisitFormFields({ visit, events, disks, placeTypes, selectedPeople, ini
         ) : (
           <VisitPersonFields initialPerson={initialPerson ?? null} canSeeMobile={canSeeMobile} countries={countries} labels={{ ...labels, haribhagats: `1. ${labels.haribhagats}` }} />
         )}
+        </div>
 
+        <div className={clsx(sectionBox, "space-y-3")}>
         <div className="grid gap-x-3 gap-y-3 sm:grid-cols-3">
           <Field label={labels.date} name="visitDate" required>
             <DatePicker name="visitDate" required defaultValue={visit?.visitDate ?? ""} />
@@ -95,6 +102,7 @@ function VisitFormFields({ visit, events, disks, placeTypes, selectedPeople, ini
         <Field label={labels.notes} name="notes">
           <Textarea name="notes" rows={1} placeholder="Anything worth remembering (optional)" defaultValue={visit?.notes ?? ""} maxLength={1000} />
         </Field>
+        </div>
       </div>
 
       <FormActions className="mt-3 justify-end">

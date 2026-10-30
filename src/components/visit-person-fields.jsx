@@ -250,12 +250,12 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels, 
     <div ref={root} className="space-y-3">
       {person && <input type="hidden" name="haribhagatIds" value={person.id} />}
 
-      <div>
+      <div className="min-w-0">
         <Label>{labels.haribhagats}</Label>
         <div className="flex gap-2">
-          <Button type="button" variant="secondary" className="flex-1 justify-start font-normal text-muted" onClick={() => setSearchOpen(true)}>
+          <Button type="button" variant="secondary" className="min-w-0 flex-1 justify-start overflow-hidden font-normal text-muted" onClick={() => setSearchOpen(true)}>
             <Search className="h-4 w-4 shrink-0" aria-hidden />
-            <span className="truncate">Search an existing Member by name, surname, village or mobile…</span>
+            <span className="min-w-0 truncate">Search an existing Member by name, surname, village or mobile…</span>
           </Button>
           {locked && (
             <Button type="button" variant="secondary" onClick={clear}>
@@ -268,7 +268,7 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels, 
 
       {searchOpen && <PersonSearchModal canSeeMobile={canSeeMobile} loading={loading} onSelect={select} onCreate={createNew} onClose={() => setSearchOpen(false)} />}
 
-      <div className="grid gap-x-3 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-x-3 gap-y-3 sm:grid-cols-2 lg:grid-cols-5">
         <Field label={labels.surname} name="surname" required={!locked}>
           <Input name="surname" maxLength={100} placeholder={hint("Surname")} {...bind("surname")} />
         </Field>

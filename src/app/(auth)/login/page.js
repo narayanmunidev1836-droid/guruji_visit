@@ -72,7 +72,7 @@ export default function LoginPage() {
         <section className="flex flex-col justify-center px-6 py-10 sm:px-10">
           <div className="mx-auto w-full max-w-sm">
             <Image src="/images/gurukul-logo.png" alt="Sanskardham Gurukul, Dhrangadhra" width={632} height={90} className="mb-8 h-9 w-auto lg:hidden" />
-            <h2 className="text-2xl font-bold tracking-tight">Staff sign in</h2>
+            <h2 className="text-2xl font-bold tracking-tight">Account sign in</h2>
             <p className="mt-1 text-sm text-muted">Use your username, email or mobile number and your password.</p>
             <div className="mt-6">
               <LoginForm labels={{ login: "Username, email or mobile", password: t("password"), submit: "Sign in" }} />
