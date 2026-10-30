@@ -2,7 +2,7 @@ import Link from "next/link";
 import clsx from "clsx";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-[transform,box-shadow,filter,background-color] disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap";
+  "inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl font-medium transition-[transform,box-shadow,filter,background-color] disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap";
 
 const variants = {
   primary:

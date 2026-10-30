@@ -24,9 +24,9 @@ function F({ label, children, className }) {
 export function SearchForm({ values, events, disks, allowMobile }) {
   const eventOptions = events.map((e) => ({ value: e.id, label: e.isActive ? e.name : `${e.name} (${t("inactive")})` }));
   const diskOptions = disks.map((d) => ({ value: d.id, label: d.isActive ? d.labelName : `${d.labelName} (${t("inactive")})` }));
-  const advanced = ["name", "fatherName", "surname", "gam", "taluko", "jillo", "pincode", "mobileNo", "dateFrom", "dateTo", "eventId", "hardDiskId", "placeType", "folder"].some(
+  const applied = ["name", "fatherName", "surname", "gam", "taluko", "jillo", "pincode", "mobileNo", "dateFrom", "dateTo", "eventId", "hardDiskId", "placeType", "folder"].filter(
     (k) => values[k] !== undefined && values[k] !== null && values[k] !== "",
-  );
+  ).length;
 
   return (
     <GetForm action="/search" role="search" className="rounded-2xl border border-border bg-surface p-4 shadow-card">
@@ -50,8 +50,8 @@ export function SearchForm({ values, events, disks, allowMobile }) {
         </Button>
       </div>
 
-      <details className="mt-4 group" open={advanced}>
-        <summary className="cursor-pointer select-none text-sm font-medium text-primary">Filters</summary>
+      <details className="mt-4 group">
+        <summary className="cursor-pointer select-none text-sm font-medium text-primary">Filters{applied > 0 && ` (${applied} applied)`}</summary>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <F label={t("name")}>
             <Input name="name" defaultValue={values.name ?? ""} />

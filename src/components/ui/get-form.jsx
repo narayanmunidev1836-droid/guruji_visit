@@ -24,6 +24,8 @@ export function GetForm({ action, children, ...props }) {
     const query = params.toString();
     const url = query ? `${action}?${query}` : action;
     const live = !event.nativeEvent.submitter; // requestSubmit() from a debounced input, not a click / Enter
+    // a click / Enter on Search folds the filters panel away so the results get the room
+    if (!live) for (const details of event.currentTarget.querySelectorAll("details[open]")) details.open = false;
     startTransition(() => (live ? router.replace(url) : router.push(url)));
   }
 
@@ -32,6 +34,7 @@ export function GetForm({ action, children, ...props }) {
     setTimeout(() => {
       const element = form.current;
       if (!element) return;
+      for (const details of element.querySelectorAll("details[open]")) details.open = false;
       for (const field of element.elements) {
         if (["submit", "reset", "button"].includes(field.type)) continue;
         if (field.tagName === "SELECT") field.selectedIndex = 0;
