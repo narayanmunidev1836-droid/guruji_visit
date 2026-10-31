@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  contactMobileInputValue,
   digitsOnly,
   diskLabelKey,
   eventNameKey,
@@ -8,6 +9,7 @@ import {
   looseKey,
   mobileInputValue,
   normalizeUsername,
+  normalizeContactMobile,
   normalizeMobile,
   normalizePincode,
   normalizeText,
@@ -97,6 +99,37 @@ describe("normalizeMobile", () => {
     expect(normalizeMobile("+44 7911 123456").error).toBeTruthy();
     expect(normalizeMobile("+1234").error).toBeTruthy();
     expect(normalizeMobile("98765432101").error).toBeTruthy();
+  });
+});
+
+describe("normalizeContactMobile (a Member's mobile)", () => {
+  it("keeps accepting Indian numbers exactly as normalizeMobile does", () => {
+    expect(normalizeContactMobile("+91 98765 43210")).toEqual({ value: "9876543210" });
+    expect(normalizeContactMobile("")).toEqual({ value: null });
+  });
+
+  it("accepts a number of another country written with + and its country code, stored as +digits", () => {
+    expect(normalizeContactMobile("+1 416 414 3653")).toEqual({ value: "+14164143653" });
+    expect(normalizeContactMobile("+44 7911 123456").value).toBe("+447911123456");
+    expect(normalizeContactMobile("+1-416-414-3653").value).toBe("+14164143653");
+  });
+
+  it("still refuses what is not a number: no + (unless Indian), too short / long, a bad +91 number", () => {
+    for (const bad of ["4164143653", "+1234", "+1234567890123456", "+0123456789", "+91 41641 43653", "+abc", "12345"]) {
+      expect(normalizeContactMobile(bad).error, bad).toBeTruthy();
+    }
+  });
+});
+
+describe("contactMobileInputValue", () => {
+  it("keeps a leading + and up to 15 digits for another country, and treats +91 / plain numbers like mobileInputValue", () => {
+    expect(contactMobileInputValue("+1 416 414 3653")).toBe("+14164143653");
+    expect(contactMobileInputValue("+")).toBe("+");
+    expect(contactMobileInputValue("+4479111234567890123")).toBe("+447911123456789");
+    expect(contactMobileInputValue("+91 98765 43210")).toBe("9876543210");
+    expect(contactMobileInputValue("98765 43210 99")).toBe("9876543210");
+    expect(contactMobileInputValue("૯૮૭૬૫૪૩૨૧૦")).toBe("9876543210");
+    expect(contactMobileInputValue(undefined)).toBe("");
   });
 });
 

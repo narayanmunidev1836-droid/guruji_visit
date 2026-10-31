@@ -2,12 +2,14 @@ import "server-only";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getEnv } from "@/lib/env";
-import { makeDupKey } from "@/lib/normalize";
+import { mergeMembers } from "@/lib/member-api";
+import { digitsOnly, makeDupKey } from "@/lib/normalize";
 import { canViewMobile, mobileForUser } from "@/lib/permissions";
 import { fail, ok, validate } from "@/lib/result";
-import { mobileField, optionalText, pincodeField, requiredText } from "@/lib/validation";
+import { contactMobileField, optionalText, pincodeField, requiredText } from "@/lib/validation";
 import { audit } from "@/lib/services/audit";
-import { buildPersonWhere } from "@/lib/services/person-filters";
+import { searchDirectory } from "@/lib/services/member-directory";
+import { buildPersonWhere, queryTokens } from "@/lib/services/person-filters";
 
 export const haribhagatSchema = z.object({
   name: requiredText("Name", 100),
@@ -19,7 +21,7 @@ export const haribhagatSchema = z.object({
   state: optionalText(100),
   country: optionalText(100),
   pincode: pincodeField,
-  mobileNo: mobileField,
+  mobileNo: contactMobileField,
 });
 
 const PAGE_SIZE = 20;
@@ -174,15 +176,60 @@ export async function getHaribhagatVisits(id) {
  * can search by mobile, and only then is the number returned with the result.
  */
 export async function pickerSearch(query, { limit = 10, allowMobile = false } = {}) {
+  const rows = await findPickerRows(query, { limit, allowMobile });
+  return rows.map((row) => ({ ...row, mobileNo: allowMobile ? row.mobileNo : undefined }));
+}
+
+/** Saved Haribhagats matching the search text, WITH their mobile number - callers must strip it for roles that may not see it. */
+async function findPickerRows(query, { limit, allowMobile }) {
   const where = buildPersonWhere({ q: query }, { allowMobile });
   if (!where) return [];
-  const rows = await db.haribhagat.findMany({
+  return db.haribhagat.findMany({
     where,
     orderBy: [{ surname: "asc" }, { name: "asc" }],
     take: limit,
     select: { id: true, name: true, fatherName: true, surname: true, gam: true, jillo: true, mobileNo: true },
   });
-  return rows.map((row) => ({ ...row, mobileNo: allowMobile ? row.mobileNo : undefined }));
+}
+
+// Rows of the Members directory loaded at a time in the "Select Member" window (more load as the user scrolls down).
+export const PICKER_PAGE_SIZE = 10;
+// Most rows of one source the window ever lists; real name searches stay far below it ("patel" is about 4,600).
+export const SEARCH_LIMIT = 5000;
+
+// Mobile numbers of a search row (saved and directory ones); removed for roles that may not see mobile numbers.
+const MOBILE_KEYS = ["mobileNo", "mobileText", "fatherMobile"];
+
+/**
+ * The "Select Member" search: saved Haribhagats AND the Members directory (member-directory.js), merged with the saved ones
+ * first and nobody listed twice. A role that may not see mobile numbers cannot search the directory by number either (the
+ * directory would match them without showing them) and gets no mobile numbers back.
+ * Nothing is cut to "the first 10", but the directory is read one PAGE at a time (a broad word such as "a" matches 26,000
+ * members and 18 MB): the first call (`offset` 0) answers the saved Members and the first PICKER_PAGE_SIZE directory rows, every later
+ * call (`offset` = the `nextOffset` of the previous answer) only the next PICKER_PAGE_SIZE directory rows. The window asks for the next
+ * page when the user scrolls to the end of the list, until `hasMore` is false.
+ * Returns { rows, directoryFailed, hasMore, nextOffset, truncated, directoryRaw }; rows carry `source` ("saved" | "directory")
+ * and a `key`. `truncated` means SEARCH_LIMIT rows were reached with more left (type more letters). `directoryRaw` is the
+ * directory's untouched page, development only and only for roles that may see mobile numbers.
+ */
+export async function searchMembers(query, { offset = 0, allowMobile = false, signal } = {}) {
+  const searchesNumber = !allowMobile && queryTokens(query).some((token) => digitsOnly(token).length >= 3);
+  const pageLimit = Math.min(PICKER_PAGE_SIZE, SEARCH_LIMIT - offset);
+  const [saved, directory] = await Promise.all([
+    findPickerRows(query, { limit: SEARCH_LIMIT + 1, allowMobile }), // later pages need them only to hide directory duplicates
+    searchesNumber || pageLimit <= 0 ? { rows: [], more: false, nextOffset: offset, failed: false } : searchDirectory(query, { limit: pageLimit, offset, signal }),
+  ]);
+  const merged = mergeMembers(saved.slice(0, SEARCH_LIMIT), directory.rows);
+  const rows = offset === 0 ? merged : merged.filter((row) => row.source === "directory");
+  const atCeiling = offset + pageLimit >= SEARCH_LIMIT;
+  return {
+    rows: allowMobile ? rows : rows.map((row) => ({ ...row, ...Object.fromEntries(MOBILE_KEYS.map((key) => [key, undefined])) })),
+    directoryFailed: directory.failed,
+    hasMore: directory.more && !atCeiling,
+    nextOffset: directory.nextOffset,
+    truncated: (offset === 0 && saved.length > SEARCH_LIMIT) || (directory.more && atCeiling),
+    directoryRaw: allowMobile ? directory.raw : undefined,
+  };
 }
 
 const PLACE_FIELDS = ["gam", "taluko", "jillo", "state", "country"];

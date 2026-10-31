@@ -28,6 +28,55 @@ const STATE_LOOKUP_ALIASES = {
   Myanmar: ["Burma"],
 };
 
+/**
+ * Country of a phone dial code, written like the dropdown list spells it. Only codes that belong to ONE country are here:
+ * +1 (USA and Canada), +7 and the like are left out on purpose - a wrong guess is worse than an empty box.
+ */
+const DIAL_CODE_COUNTRY = {
+  "+44": "United Kingdom", "+61": "Australia", "+64": "New Zealand", "+27": "South Africa", "+254": "Kenya", "+255": "Tanzania",
+  "+256": "Uganda", "+260": "Zambia", "+263": "Zimbabwe", "+230": "Mauritius", "+971": "United Arab Emirates", "+966": "Saudi Arabia",
+  "+968": "Oman", "+974": "Qatar", "+965": "Kuwait", "+973": "Bahrain", "+65": "Singapore", "+60": "Malaysia", "+977": "Nepal",
+  "+94": "Sri Lanka", "+92": "Pakistan", "+880": "Bangladesh", "+353": "Ireland", "+49": "Germany", "+33": "France",
+  "+31": "Netherlands", "+41": "Switzerland", "+81": "Japan",
+};
+
+/**
+ * Country and state to pre-fill for someone found in the Members directory, from the dial code of their mobile number.
+ * No code or +91 -> the usual India / Gujarat. A code of exactly one other country -> that country, state left empty.
+ * Any other code (e.g. +1) -> both left empty for staff to choose. The number says where it was registered, not where the person lives.
+ */
+export function placeFromDialCode(dialCode) {
+  const code = String(dialCode ?? "").replace(/\s+/g, "");
+  if (!code || code === "+91") return { country: DEFAULT_COUNTRY, state: DEFAULT_STATE };
+  const country = DIAL_CODE_COUNTRY[code];
+  return { country: country ? country.toLocaleUpperCase("en-US") : "", state: "" };
+}
+
+// Members abroad usually have their COUNTRY in the city box of the directory ("CANADA", "USA", "AUCKLAND, NEW ZEALAND"), and
+// many of them still carry a +91 number, so the city is a better hint than the dial code. These spell a country another way.
+const CITY_ALIASES = { USA: "United States", AMERICA: "United States", UK: "United Kingdom", ENGLAND: "United Kingdom", UAE: "United Arab Emirates" };
+
+const upper = (value) => String(value ?? "").toLocaleUpperCase("en-US");
+
+/**
+ * Country and state to pre-fill for someone found in the Members directory, from where they live and their phone number:
+ * 1. the city names a country ("CANADA", "AUCKLAND, NEW ZEALAND", "AMERICA N.J", "USA") -> that country (the names of
+ *    `countries`, the dropdown list, plus a few aliases), state empty - this also settles +1 (USA or Canada);
+ * 2. else the dial code decides, see `placeFromDialCode`.
+ */
+export function placeFromMember({ city, dialCode } = {}, countries = []) {
+  const names = new Set(countries.map(upper));
+  const clean = upper(city).replace(/\./g, "");
+  const parts = clean.split(/[,/()]+/).map((part) => part.replace(/\s+/g, " ").trim()).filter(Boolean);
+  const words = clean.split(/[^\p{L}]+/u).filter(Boolean);
+  const candidates = [clean.replace(/[,/()]+/g, " ").replace(/\s+/g, " ").trim(), ...parts.reverse()];
+  const country =
+    candidates.find((text) => names.has(text)) ??
+    upper(CITY_ALIASES[candidates.find((text) => CITY_ALIASES[text])] ?? CITY_ALIASES[words.find((word) => CITY_ALIASES[word])]);
+  if (country) return { country, state: country === DEFAULT_COUNTRY ? DEFAULT_STATE : "" };
+  return placeFromDialCode(dialCode);
+}
+
 /** Names to try, in order, when asking for the states of a country. */
 export function stateLookupNames(country) {
   const name = String(country ?? "").trim();

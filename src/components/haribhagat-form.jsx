@@ -120,8 +120,9 @@ export function HaribhagatForm({ person, labels, returnTo, countries = [], modal
           <Input name="pincode" defaultValue={v.pincode ?? ""} inputMode="numeric" maxLength={6} autoComplete="off" />
         </Field>
         {labels.mobileNo !== null && (
-          <Field label={labels.mobileNo} name="mobileNo" hint={v.mobileMasked ? "Hidden for your role. Leave empty to keep the stored number." : "10 digit mobile number"}>
+          <Field label={labels.mobileNo} name="mobileNo" hint={v.mobileMasked ? "Hidden for your role. Leave empty to keep the stored number." : "10 digits, or +country code for another country"}>
             <MobileInput
+              international
               name="mobileNo"
               defaultValue={v.mobileMasked ? "" : (v.mobileNo ?? "")}
               placeholder={v.mobileMasked ? v.mobileNo : undefined}

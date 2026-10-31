@@ -53,6 +53,20 @@ export function normalizeMobile(input) {
   return { error: "Enter a valid 10 digit mobile number." };
 }
 
+/**
+ * Mobile of a MEMBER (Haribhagat): like `normalizeMobile`, but a number of another country is accepted too when it is written
+ * with its country code - "+" and 8-15 digits (E.164), stored as "+14164143653". A "+91" number still has to be a valid
+ * 10 digit Indian mobile. (User / login mobiles keep using `normalizeMobile`: Indian numbers only.)
+ */
+export function normalizeContactMobile(input) {
+  const indian = normalizeMobile(input);
+  if (!indian.error) return indian;
+  const raw = normalizeText(input) ?? "";
+  const digits = toAsciiDigits(raw).replace(/\D/g, "");
+  if (raw.startsWith("+") && !digits.startsWith("91") && /^[1-9]\d{7,14}$/.test(digits)) return { value: `+${digits}` };
+  return { error: "Enter a valid 10 digit mobile number, or a number with its country code (+1 416 414 3653)." };
+}
+
 export const MAX_USERNAME_LENGTH = 50;
 
 /**
@@ -85,6 +99,19 @@ export function mobileInputValue(value) {
   if (digits.length === 12 && digits.startsWith("91")) digits = digits.slice(2);
   if (digits.length === 11 && digits.startsWith("0")) digits = digits.slice(1);
   return digits.slice(0, 10);
+}
+
+/**
+ * What a Member's mobile box keeps while typing / pasting: the same as `mobileInputValue`, except that a number starting with
+ * "+" and another country code keeps its "+" and may be up to 15 digits ("+91 ..." is still the Indian 10 digits).
+ */
+export function contactMobileInputValue(value) {
+  const text = toAsciiDigits(value ?? "").trimStart();
+  if (text.startsWith("+")) {
+    const digits = text.replace(/\D/g, "");
+    if (!digits.startsWith("91")) return `+${digits.slice(0, 15)}`;
+  }
+  return mobileInputValue(text);
 }
 
 /** Pincode is stored as a string so leading zeros are never lost. */

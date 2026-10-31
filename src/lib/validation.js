@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { upperText, normalizeMobile, normalizePincode } from "@/lib/normalize";
+import { upperText, normalizeContactMobile, normalizeMobile, normalizePincode } from "@/lib/normalize";
 
 // Reusable zod field builders. All text is trimmed/whitespace-collapsed/NFC-normalized and UPPER-CASED before validation.
 
@@ -19,6 +19,19 @@ export const mobileField = z.preprocess(
   asText,
   z.string().transform((value, ctx) => {
     const result = normalizeMobile(value);
+    if (result.error) {
+      ctx.addIssue({ code: "custom", message: result.error });
+      return z.NEVER;
+    }
+    return result.value;
+  }),
+);
+
+/** A Member's mobile: an Indian 10 digit number, or another country's number written with "+" and its country code. */
+export const contactMobileField = z.preprocess(
+  asText,
+  z.string().transform((value, ctx) => {
+    const result = normalizeContactMobile(value);
     if (result.error) {
       ctx.addIssue({ code: "custom", message: result.error });
       return z.NEVER;

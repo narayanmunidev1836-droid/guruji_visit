@@ -81,7 +81,7 @@ test.describe("Haribhagat directory", () => {
     await fill(page, { Name: "Test", Surname: unique("Val"), Pincode: "123", "Mobile No": "12345" });
     await page.getByRole("button", { name: /^Save/ }).click();
     await expect(page.getByText("Pincode must be 6 digits.")).toBeVisible();
-    await expect(page.getByText("Enter a valid 10 digit mobile number.")).toBeVisible();
+    await expect(page.getByText(/Enter a valid 10 digit mobile number/)).toBeVisible();
     await expect(page).toHaveURL(/\/haribhagats\/new/);
   });
 

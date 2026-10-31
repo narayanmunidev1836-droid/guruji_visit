@@ -6,6 +6,11 @@ const schema = z.object({
   APP_URL: z.string().default("http://localhost:3000"),
   // Comma separated roles allowed to see mobile numbers.
   MOBILE_VISIBLE_ROLES: z.string().default("ADMIN,STAFF"),
+  // Members directory searched next to the saved Members in "Select Member". Without a key only saved Members are searched.
+  MEMBER_API_URL: z.string().default("https://mobapi-live.ssgd.org"),
+  MEMBER_API_KEY: z.string().default(""),
+  // The domain the API owner whitelisted for this app (e.g. https://guruji-visit.vercel.app); sent as Origin / Referer. Change it when the site moves.
+  MEMBER_API_ORIGIN: z.string().default(""),
 });
 
 let cached;

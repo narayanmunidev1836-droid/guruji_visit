@@ -17,7 +17,7 @@ Open the site, enter your e-mail and password. Change your password under **My a
    Filters like Name + Surname must match **the same person**.
 
 ## Adding a Haribhagat
-**Haribhagats → Add**. Name and Surname are required; the rest is optional. Mobile numbers are stored as text and must be exactly 10 digits (the box takes digits only, at most 10). Pincode is 6 digits.
+**Haribhagats → Add**. Name and Surname are required; the rest is optional. Mobile numbers are stored as text: 10 digits, or - for a number of another country - a `+`, the country code and the number (for example `+1 416 414 3653`). Pincode is 6 digits.
 If a similar person already exists you get a **warning with a link to the existing record**. Use *Save anyway* only if it is really a different person — records are never merged automatically.
 
 ## Linking photos to people and events ("Needs review")

@@ -9,7 +9,7 @@ import { X } from "lucide-react";
  * where it is rendered in the DOM (e.g. a `text-right` table cell), so it resets the text alignment itself. Render it only while it should be open and unmount it to
  * close it; `onClose` is also called when the user closes it (X, Esc or a click outside) so the parent can unmount it.
  */
-export function Modal({ title, onClose, wide = false, fixed = false, children }) {
+export function Modal({ title, onClose, wide = false, wider = false, fixed = false, children }) {
   const ref = useRef(null);
   const titleId = useId();
 
@@ -30,7 +30,7 @@ export function Modal({ title, onClose, wide = false, fixed = false, children })
         "m-auto max-h-[calc(100dvh-2rem)] rounded-2xl border border-border bg-surface p-0 text-left text-foreground shadow-2xl backdrop:bg-black/50",
         // fixed: constant height, only the content inside scrolls (header and the caller's top / bottom rows stay put)
         fixed ? "h-[min(44rem,calc(100dvh-2rem))] overflow-hidden open:flex open:flex-col" : "overflow-auto",
-        wide ? "w-[min(64rem,calc(100vw-2rem))]" : "w-[min(48rem,calc(100vw-2rem))]",
+        wider ? "w-[min(80rem,calc(100vw-2rem))]" : wide ? "w-[min(64rem,calc(100vw-2rem))]" : "w-[min(48rem,calc(100vw-2rem))]",
       )}
     >
       <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-5 py-3">

@@ -30,6 +30,7 @@ Request validation uses zod; a bad body gives `400 BAD_REQUEST` with the first p
 | Route | Behaviour |
 |---|---|
 | `GET /api/health` | Public. `{status:"ok"}` or 503 `{status:"database_unreachable"}`. For uptime monitors. |
+| `GET /api/members/search?q=text&offset=0` | 401 without a (valid) session; else `{ rows, directoryFailed, hasMore, nextOffset, truncated }` (+ `directoryRaw` in `next dev` only): the "Select Member" search on the new entry - saved Members (only in the answer for `offset=0`) + the external Members directory, **100 directory rows per call**; the window asks again with `offset=nextOffset` while `hasMore` (when the user scrolls to the end of the list), up to 5000 rows (`truncated` then). Mobile numbers are removed for roles that may not see them. A route and not a server action because server actions are queued (a slow search would block the next one); the browser aborts the fetch when the user types on and `request.signal` cancels the call to the directory. |
 | `GET /api/photos/:id/thumbnail` | 401 without session; 404 unknown/invalid id or no thumbnail; else `image/jpeg`, `Cache-Control: private, max-age=86400`. File path derived only from the numeric id. |
 | `GET /api/photos/:id/open` | 401 without session; 404 unknown; **409 text** (`Connect HDD-002 to access the original file.` / missing / unverified) unless the disk is connected and the file verified; else **302** to `LOCAL_AGENT_URL/open?grant=<JWT 60 s>` |
 
@@ -46,7 +47,7 @@ Search URL parameters (`/search`): `q, name, fatherName, surname, gam, taluko, j
 | File | Actions | Permission |
 |---|---|---|
 | `auth.js` | `loginAction`, `logoutAction`, `changePasswordAction` | public / login |
-| `haribhagats.js` | `saveHaribhagatAction` (create/edit, duplicate warning, `confirmDuplicate=1`), `pickerSearchAction` (type-ahead, no mobile numbers) | `haribhagat.write` / login |
+| `haribhagats.js` | `saveHaribhagatAction` (create/edit, duplicate warning, `confirmDuplicate=1`), `pickerSearchAction` (type-ahead of saved people, no mobile numbers; used by the visit edit form) | `haribhagat.write` / login |
 | `events.js` | `createEventAction` (`event.create`), `updateEventAction`, `deleteEventAction` (`event.manage`; both need the admin role or the *Add events* grant) | see permission matrix |
 | `disks.js` | `createDiskAction` (`disk.create`: ADMIN+STAFF); `updateDiskAction`, `toggleDiskAction`, `deleteDiskAction` (`disk.manage`: ADMIN, or STAFF with the *Add hard disks* grant) | see left |
 | `visits.js` | `createVisitAction`, `updateVisitAction`, `attachPhotosAction`, `detachPhotosAction` | `visit.write` |

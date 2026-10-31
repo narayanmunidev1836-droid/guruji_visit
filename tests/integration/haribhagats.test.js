@@ -46,6 +46,14 @@ describe.skipIf(!HAS_DB)("Haribhagat directory", () => {
     expect(await db.haribhagat.count()).toBe(0);
   });
 
+  it("stores a Member's number of another country as +code and number, but not without the +", async () => {
+    const noPlus = await svc.createHaribhagat(staff, person({ mobileNo: "4164143653" }));
+    expect(noPlus.ok).toBe(false);
+    const abroad = await svc.createHaribhagat(staff, person({ mobileNo: "+1 416 414 3653" }));
+    expect(abroad.ok).toBe(true);
+    expect(abroad.person.mobileNo).toBe("+14164143653");
+  });
+
   it("warns about a possible duplicate instead of silently creating it", async () => {
     await svc.createHaribhagat(staff, person());
     const again = await svc.createHaribhagat(staff, person({ name: " ramesh ", surname: "PATEL" }));
