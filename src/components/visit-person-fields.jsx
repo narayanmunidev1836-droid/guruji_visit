@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { AlertTriangle, Loader2, Search, UserPlus, X } from "lucide-react";
-import { haribhagatDetailsAction } from "@/actions/haribhagats";
+import { directoryMemberDetailsAction, haribhagatDetailsAction } from "@/actions/haribhagats";
 import { Field, SubmitButton, useFormState } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -17,6 +17,7 @@ import { Input, Label } from "@/components/ui/inputs";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { countryOptions, DEFAULT_COUNTRY, DEFAULT_STATE, placeFromMember } from "@/lib/countries";
 import { formatDate } from "@/lib/format";
+import { mergeMemberDetails } from "@/lib/member-api";
 
 const FIELDS = ["surname", "name", "fatherName", "mobileNo", "gam", "taluko", "jillo", "state", "country", "pincode"];
 // A new person starts with the usual state and country already filled in.
@@ -53,7 +54,8 @@ function logDirectoryAnswer(text, raw) {
 
 /**
  * "Select Member" window: live search over the saved Members AND the Members directory, one table. A saved Member is picked by
- * id (`onSelect`); a directory Member (`source: "directory"`, has a Member ID) fills the form as a new person (`onPickDirectory`).
+ * id (`onSelect`, details from our database); a directory Member (`source: "directory"`, has a Member ID) is loaded from the Members API
+ * and fills the form as a new person (`onPickDirectory`).
  * "Create New" starts an empty new person.
  */
 function PersonSearchModal({ canSeeMobile, loading, onSelect, onPickDirectory, onCreate, onClose }) {
@@ -183,7 +185,12 @@ function PersonSearchModal({ canSeeMobile, loading, onSelect, onPickDirectory, o
   // Columns follow the first page and do not appear later (the table would jump while scrolling): the mobiles are always there for directory rows.
   const showMobile = canSeeMobile && (showDirectory || results.some((p) => p.mobileText || p.mobileNo));
   const showFatherMobile = canSeeMobile && showDirectory;
-  const choose = (p) => (p.source === "directory" ? onPickDirectory(p) : onSelect(p.id));
+  // one pick at a time: while a pick is loading its details, further clicks are ignored
+  const choose = (p) => {
+    if (loading) return;
+    if (p.source === "directory") onPickDirectory(p);
+    else onSelect(p.id);
+  };
 
   return (
     <Modal title="Select Member" onClose={onClose} wider fixed>
@@ -359,17 +366,34 @@ export function VisitPersonFields({ initialPerson = null, canSeeMobile, labels, 
   }
 
   /**
-   * A Member found only in the directory: fill the form as a NEW Haribhagat (saved together with the entry). Nothing is locked,
-   * so staff can add what the directory does not have (taluko, district, state ...). If the person turns out to be saved
-   * already, the usual "similar person" warning offers "Use this person".
+   * A Member found only in the directory: its full details are loaded from the Members API (`GetMember`, via the server) and fill
+   * the form as a NEW Haribhagat (saved together with the entry). The details win over what the search row showed; where they are
+   * empty - or when they cannot be loaded (a toast says so) - the row's data is used. Nothing is locked, so staff can still add or
+   * correct anything. If the person turns out to be saved already, the usual "similar person" warning offers "Use this person".
+   * (A Member that is saved here is loaded from the database instead, see `select`.)
    */
   function pickDirectory(member) {
-    const { name, fatherName, surname, gam, pincode, mobileNo, dialCode } = member;
-    setPerson(null);
-    // country / state: from the city when it names a country ("CANADA", "USA"), else from the mobile's dial code (+91 or none: India / Gujarat)
-    setValues({ ...EMPTY, ...placeFromMember({ city: gam, dialCode }, countries), name, fatherName, surname, gam, pincode, mobileNo: canSeeMobile ? mobileNo ?? "" : "" });
-    setSearchOpen(false);
-    setTimeout(() => root.current?.querySelector('input[name="taluko"]')?.focus(), 0);
+    startLoad(async () => {
+      let found = { details: null, failed: false };
+      try {
+        if (member.typeCode) found = await directoryMemberDetailsAction(member.memberId, member.typeCode);
+      } catch {
+        found = { details: null, failed: true };
+      }
+      if (found.failed) toast.error("The full details could not be loaded from the Members directory. The details from the search are filled in.");
+      const m = mergeMemberDetails(member, found.details);
+      // country / state: from the city or the directory's state box when they name a country ("CANADA", "U.S.A."), else from the
+      // mobile's dial code (+91 or none: India / Gujarat). An Indian member keeps the state the directory has.
+      const place = placeFromMember({ city: m.gam, region: m.region, dialCode: m.dialCode }, countries);
+      const state = place.country === DEFAULT_COUNTRY && m.region ? m.region : place.state;
+      const next = { ...EMPTY, ...place, state, name: m.name, fatherName: m.fatherName, surname: m.surname, gam: m.gam, taluko: m.taluko, jillo: m.jillo, pincode: m.pincode, mobileNo: canSeeMobile ? m.mobileNo : "" };
+      setPerson(null);
+      setValues(next);
+      setSearchOpen(false);
+      // the cursor goes to the first place box the directory left empty
+      const empty = ["taluko", "jillo", "pincode"].find((key) => !next[key]);
+      if (empty) setTimeout(() => root.current?.querySelector(`input[name="${empty}"]`)?.focus(), 0);
+    });
   }
 
   /** "Create New" in the search window: start a new Haribhagat, prefilled from what was typed. */

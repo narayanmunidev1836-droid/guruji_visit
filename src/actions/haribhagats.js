@@ -6,9 +6,10 @@ import { runAction } from "@/lib/action";
 import { getCurrentUser, requirePermission } from "@/lib/auth/dal";
 import { getEnv } from "@/lib/env";
 import { canViewMobile } from "@/lib/permissions";
+import { ok } from "@/lib/result";
 import { formDataToObject } from "@/lib/validation";
 import { listStates } from "@/lib/services/countries";
-import { createHaribhagat, deleteHaribhagat, getHaribhagat, pickerSearch, suggestPlaces, updateHaribhagat } from "@/lib/services/haribhagats";
+import { createHaribhagat, deleteHaribhagat, getDirectoryMemberDetails, getHaribhagat, pickerSearch, suggestPlaces, updateHaribhagat } from "@/lib/services/haribhagats";
 
 /** Type-ahead for the Haribhagat search on the entry form. Returns [] for anonymous callers. Mobile numbers are searchable / returned only for roles that may see them. */
 export async function pickerSearchAction(query) {
@@ -42,6 +43,17 @@ export async function haribhagatDetailsAction(id) {
   if (!person) return null;
   const { id: personId, name, fatherName, surname, gam, taluko, jillo, state, country, pincode, mobileNo, mobileMasked } = person;
   return { id: personId, name, fatherName, surname, gam, taluko, jillo, state, country, pincode, mobileNo, mobileMasked };
+}
+
+/**
+ * Full details of a Member of the Members directory (not saved here) to fill the visit form after the user picked it in the search:
+ * { details, failed }. `details` is null for anonymous callers, unusable ids and when the directory has nothing (the form then
+ * uses what the search showed); `failed` says the directory could not be reached. Mobile numbers only for roles that may see them.
+ */
+export async function directoryMemberDetailsAction(memberId, typeCode) {
+  const user = await getCurrentUser();
+  if (!user || typeof typeCode !== "string") return { details: null, failed: false };
+  return getDirectoryMemberDetails(memberId, typeCode, { allowMobile: canViewMobile(user, getEnv().mobileVisibleRoles) });
 }
 
 /**

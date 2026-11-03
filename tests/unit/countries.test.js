@@ -37,6 +37,27 @@ describe("placeFromMember", () => {
   it("India named as the city gives Gujarat as the state", () => {
     expect(place("INDIA", "+91")).toEqual({ country: "INDIA", state: "GUJARAT" });
   });
+
+  // GetMember: the directory's state box holds the STATE of an Indian member but the COUNTRY of one abroad.
+  describe("region (the directory's state box)", () => {
+    const region = (city, region, dialCode) => placeFromMember({ city, region, dialCode }, list);
+
+    it("takes the country from a region that names one when the city does not", () => {
+      expect(region("PARSIPPANY", "U.S.A.", "+1")).toEqual({ country: "UNITED STATES", state: "" });
+      expect(region("STREATHAM", "U.K.", "+91")).toEqual({ country: "UNITED KINGDOM", state: "" });
+      expect(region("SYDNEY", "AUSTRALIA", "+61")).toEqual({ country: "AUSTRALIA", state: "" });
+    });
+
+    it("the city still comes first", () => {
+      expect(region("CANADA", "U.S.A.", "+1")).toEqual({ country: "CANADA", state: "" });
+    });
+
+    it("a state of India names no country, so the dial code decides (and the caller uses the region as the state)", () => {
+      expect(region("RAJSITAPUR", "GUJARAT", "+91")).toEqual({ country: "INDIA", state: "GUJARAT" });
+      expect(region("PUNE", "MAHARASHTRA", "")).toEqual({ country: "INDIA", state: "GUJARAT" });
+      expect(region("LONDON", "", "+44")).toEqual({ country: "UNITED KINGDOM", state: "" });
+    });
+  });
 });
 
 describe("placeFromDialCode", () => {

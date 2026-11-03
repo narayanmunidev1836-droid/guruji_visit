@@ -44,6 +44,20 @@ function birthdayText(value) {
 }
 
 /**
+ * The `memberType` letters `GET /Member/GetMember` understands, by what the search calls the entry: "Member" -> M, "LoginRequest" -> LR.
+ * Any other letter is NOT sent: the API does not complain, it answers with a different person of another table.
+ */
+export const DETAIL_TYPE_CODES = new Set(["M", "LR"]);
+const TYPE_CODE_BY_NAME = { MEMBER: "M", LOGINREQUEST: "LR" };
+
+/** "M" / "LR" of a search entry - the prefix of its `displayId` ("M-2043", "LR-11185"), else from `memberType`; "" when unknown. */
+function detailTypeCode(item) {
+  const prefix = /^([A-Za-z]+)-/.exec(String(item.displayId ?? ""))?.[1]?.toUpperCase();
+  if (prefix && DETAIL_TYPE_CODES.has(prefix)) return prefix;
+  return TYPE_CODE_BY_NAME[String(item.memberType ?? "").replace(/\s+/g, "").toUpperCase()] ?? "";
+}
+
+/**
  * Turns the answer of the Members directory (`GET /Member/GetSearchMembers`) into rows for the "Select Member" window.
  * Every entry is kept whatever its `memberType` ("Member", "LoginRequest" ...). Only the fields the window needs are passed on
  * (name, village, pincode, mobile, father's mobile, birthday, type, photo link): the API also sends Aadhaar / PAN numbers,
@@ -51,6 +65,7 @@ function birthdayText(value) {
  * `memberId` is the directory's own number; `displayMemberId` is the number people know (shown in the window).
  * `mobileNo` is the number that fills the form (Indian 10 digits, or "+14164143653" for another country); `mobileText` /
  * `fatherMobile` are for display only. `dialCode` ("+91") of the member's mobile helps to pre-fill the country (`placeFromMember`).
+ * `typeCode` ("M" / "LR", "" when unknown) is the `memberType` letter that `GetMember` needs to load the member's full details.
  */
 export function parseDirectoryMembers(body) {
   if (!Array.isArray(body)) return [];
@@ -79,10 +94,57 @@ export function parseDirectoryMembers(body) {
       fatherMobile: phoneText(item.fatherMobile, item.fathersMobileCountryCode),
       birthday: birthdayText(item.birthday),
       memberType: String(item.memberType ?? "").trim().slice(0, 30),
+      typeCode: detailTypeCode(item),
       photoUrl: photoLink(item.profilePath),
     });
   }
   return rows;
+}
+
+/**
+ * Turns the answer of `GET /Member/GetMember?memberId=&memberType=` into the details that fill the entry form, or null when the
+ * member is not there (`memberInfo` is null for an unknown id), the call was refused, or it answered about somebody else
+ * (`memberInfo.studentId` is not the `memberId` asked for). Only these fields are kept - the API also sends Aadhaar / PAN, e-mail,
+ * bank and family details, which must never reach the browser. Texts are CAPITALS like all typed text.
+ * `region` is the API's `stateName`: the STATE of an Indian member ("GUJARAT"), the COUNTRY of one abroad ("U.K.") - see `placeFromMember`.
+ * A "LoginRequest" member comes back with little more than the name and the mobile; empty fields are simply "" (see `mergeMemberDetails`).
+ */
+export function parseDirectoryMemberDetails(body, memberId) {
+  const info = body && typeof body === "object" && body.isSuccess !== false ? body.memberInfo : null;
+  if (!info || typeof info !== "object" || Number(info.studentId) !== Number(memberId)) return null;
+  const pincode = toAsciiDigits(info.pinCodeNo ?? "").replace(/\D/g, "");
+  return {
+    name: text(info.studentname),
+    fatherName: text(info.fathersname),
+    surname: text(info.surname),
+    gam: text(info.cityVillage),
+    taluko: text(info.taluko),
+    jillo: text(info.district),
+    region: text(info.stateName),
+    pincode: /^\d{6}$/.test(pincode) ? pincode : "",
+    mobileNo: formMobile(info.mobileNo, body.mobileNoCountryCode),
+    dialCode: String(body.mobileNoCountryCode ?? "").trim().slice(0, 8),
+  };
+}
+
+/**
+ * The values for the entry form: the full `details` of `GetMember` win, and wherever those are empty (or the call failed, `details`
+ * null) the search `row` fills the gap, so picking a Member never gives less than the search already showed.
+ */
+export function mergeMemberDetails(row, details) {
+  const pick = (key) => details?.[key] || row?.[key] || "";
+  return {
+    name: pick("name"),
+    fatherName: pick("fatherName"),
+    surname: pick("surname"),
+    gam: pick("gam"),
+    taluko: details?.taluko ?? "",
+    jillo: details?.jillo ?? "",
+    region: details?.region ?? "",
+    pincode: pick("pincode"),
+    mobileNo: pick("mobileNo"),
+    dialCode: pick("dialCode"),
+  };
 }
 
 /**

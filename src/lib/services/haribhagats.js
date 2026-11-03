@@ -8,7 +8,7 @@ import { canViewMobile, mobileForUser } from "@/lib/permissions";
 import { fail, ok, validate } from "@/lib/result";
 import { contactMobileField, optionalText, pincodeField, requiredText } from "@/lib/validation";
 import { audit } from "@/lib/services/audit";
-import { searchDirectory } from "@/lib/services/member-directory";
+import { getDirectoryMember, searchDirectory } from "@/lib/services/member-directory";
 import { buildPersonWhere, queryTokens } from "@/lib/services/person-filters";
 
 export const haribhagatSchema = z.object({
@@ -230,6 +230,17 @@ export async function searchMembers(query, { offset = 0, allowMobile = false, si
     truncated: (offset === 0 && saved.length > SEARCH_LIMIT) || (directory.more && atCeiling),
     directoryRaw: allowMobile ? directory.raw : undefined,
   };
+}
+
+/**
+ * The full details of the directory Member the user clicked in "Select Member" (`GetMember`, see `getDirectoryMember`), to fill the
+ * entry form. `memberId` / `typeCode` are the `memberId` / `typeCode` of the search row. A role that may not see mobile numbers gets
+ * none. Returns { details, failed } - `details` null when there are none (the form then keeps the data of the search row).
+ * Members that are saved here are not loaded from the directory but from the database (`getHaribhagat`).
+ */
+export async function getDirectoryMemberDetails(memberId, typeCode, { allowMobile = false } = {}) {
+  const { details, failed } = await getDirectoryMember(memberId, typeCode);
+  return { details: details && !allowMobile ? { ...details, mobileNo: "" } : details, failed };
 }
 
 const PLACE_FIELDS = ["gam", "taluko", "jillo", "state", "country"];

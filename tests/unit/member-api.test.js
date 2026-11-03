@@ -1,12 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { mergeMembers, parseDirectoryMembers } from "@/lib/member-api";
+import { mergeMemberDetails, mergeMembers, parseDirectoryMemberDetails, parseDirectoryMembers } from "@/lib/member-api";
 import { _resetEnvForTests } from "@/lib/env";
-import { searchDirectory } from "@/lib/services/member-directory";
+import { getDirectoryMember, searchDirectory } from "@/lib/services/member-directory";
 
 // Shaped like the real GetSearchMembers answer (invented people, but with the sensitive fields the API really sends).
 const entry = (over = {}) => ({
   memberId: 3326,
   displayMemberId: 3926,
+  displayId: "M-3926",
   firstName: "ASHISHBHAI",
   lastName: "PATEL",
   fatherName: "PRAHLADBHAI",
@@ -48,8 +49,19 @@ describe("parseDirectoryMembers", () => {
       fatherMobile: "7487712122",
       birthday: "1981-06-29",
       memberType: "Member",
+      typeCode: "M",
       photoUrl: "https://example.org/photo.jpg",
     });
+  });
+
+  it("knows the memberType letter GetMember needs: from the displayId prefix, else from the type name, else none", () => {
+    const code = (over) => parseDirectoryMembers([entry(over)])[0].typeCode;
+    expect(code({ displayId: "M-2043", memberType: "Member" })).toBe("M");
+    expect(code({ displayId: "LR-11185", memberType: "LoginRequest" })).toBe("LR");
+    expect(code({ displayId: undefined, memberType: "Member" })).toBe("M");
+    expect(code({ displayId: "", memberType: "Login Request" })).toBe("LR");
+    expect(code({ displayId: "ZZ-1", memberType: "Visitor" })).toBe(""); // an unknown letter would load another person
+    expect(code({ displayId: undefined, memberType: "" })).toBe("");
   });
 
   it("fills the form with a number of another country as +code and the number, and shows it with its dial code", () => {
@@ -78,7 +90,7 @@ describe("parseDirectoryMembers", () => {
 
   it("passes on nothing but the fields the window needs", () => {
     const keys = Object.keys(parseDirectoryMembers([entry()])[0]).sort();
-    expect(keys).toEqual(["birthday", "dialCode", "fatherMobile", "fatherName", "gam", "key", "memberId", "memberType", "mobileNo", "mobileText", "name", "photoUrl", "pincode", "source", "surname", "displayMemberId"].sort());
+    expect(keys).toEqual(["birthday", "dialCode", "fatherMobile", "fatherName", "gam", "key", "memberId", "memberType", "mobileNo", "mobileText", "name", "photoUrl", "pincode", "source", "surname", "displayMemberId", "typeCode"].sort());
   });
 
   it("never passes Aadhaar, PAN or e-mail to the browser", () => {
@@ -102,6 +114,90 @@ describe("parseDirectoryMembers", () => {
   it("returns [] for anything that is not a list", () => {
     expect(parseDirectoryMembers(null)).toEqual([]);
     expect(parseDirectoryMembers({ message: "denied" })).toEqual([]);
+  });
+});
+
+// Shaped like the real GetMember answer (invented person; the real one has ~250 fields incl. Aadhaar, PAN, e-mail, bank and family data).
+const detailBody = (info = {}, over = {}) => ({
+  memberInfo: {
+    studentId: 2058,
+    ssgdStudentId: 2043,
+    surname: "gadhavi",
+    studentname: "Hardik",
+    fathersname: "RAJUBHAI",
+    cityVillage: "SURAT",
+    taluko: "SURAT",
+    district: "SURAT",
+    stateName: "GUJARAT",
+    pinCodeNo: "395009",
+    mobileNo: "9081592215",
+    fatherSMobile: "9624035153",
+    aadharNo: "111122223333",
+    panNo: "ABCDE1234F",
+    emailid: "someone@example.org",
+    accountNo: "99887766",
+    ...info,
+  },
+  mobileNoCountryCode: "+91",
+  isSuccess: true,
+  errorMessage: null,
+  ...over,
+});
+
+describe("parseDirectoryMemberDetails", () => {
+  it("maps GetMember to the entry form's fields in CAPITALS, with taluko, district and the state box as `region`", () => {
+    expect(parseDirectoryMemberDetails(detailBody(), 2058)).toEqual({
+      name: "HARDIK",
+      fatherName: "RAJUBHAI",
+      surname: "GADHAVI",
+      gam: "SURAT",
+      taluko: "SURAT",
+      jillo: "SURAT",
+      region: "GUJARAT",
+      pincode: "395009",
+      mobileNo: "9081592215",
+      dialCode: "+91",
+    });
+  });
+
+  it("never passes Aadhaar, PAN, e-mail, bank or the father's mobile on", () => {
+    const json = JSON.stringify(parseDirectoryMemberDetails(detailBody(), 2058));
+    for (const secret of ["111122223333", "ABCDE1234F", "someone@example.org", "99887766", "9624035153"]) expect(json).not.toContain(secret);
+  });
+
+  it("is null when the member is not there, the call failed, or the answer is about somebody else", () => {
+    expect(parseDirectoryMemberDetails({ memberInfo: null, isSuccess: true }, 2058)).toBeNull(); // unknown id
+    expect(parseDirectoryMemberDetails(detailBody({}, { isSuccess: false }), 2058)).toBeNull();
+    expect(parseDirectoryMemberDetails(detailBody({ studentId: 11185 }), 2058)).toBeNull();
+    for (const junk of [null, undefined, "x", [], {}]) expect(parseDirectoryMemberDetails(junk, 2058)).toBeNull();
+  });
+
+  it("keeps a number of another country as +code and the number, and drops an unusable pincode / mobile", () => {
+    const abroad = parseDirectoryMemberDetails(detailBody({ cityVillage: "U.K.", stateName: "U.K.", taluko: "", district: "", pinCodeNo: "", mobileNo: "7915092422" }, { mobileNoCountryCode: "+44" }), 2058);
+    expect(abroad).toMatchObject({ gam: "U.K.", region: "U.K.", taluko: "", jillo: "", pincode: "", mobileNo: "+447915092422", dialCode: "+44" });
+    expect(parseDirectoryMemberDetails(detailBody({ pinCodeNo: "39", mobileNo: "12345" }), 2058)).toMatchObject({ pincode: "", mobileNo: "" });
+  });
+
+  it("gives empty texts for the fields a LoginRequest member does not have (null in the API)", () => {
+    const sparse = detailBody({ cityVillage: null, taluko: null, district: null, stateName: null, pinCodeNo: null, fathersname: null });
+    expect(parseDirectoryMemberDetails(sparse, 2058)).toMatchObject({ gam: "", taluko: "", jillo: "", region: "", pincode: "", fatherName: "" });
+  });
+});
+
+describe("mergeMemberDetails", () => {
+  const row = parseDirectoryMembers([entry({ city: "VADODARA", pincode: "390002" })])[0];
+
+  it("lets the full details win over the search row", () => {
+    const details = parseDirectoryMemberDetails(detailBody({ cityVillage: "SURAT", pinCodeNo: "395009" }), 2058);
+    expect(mergeMemberDetails(row, details)).toMatchObject({ name: "HARDIK", surname: "GADHAVI", gam: "SURAT", taluko: "SURAT", jillo: "SURAT", region: "GUJARAT", pincode: "395009", mobileNo: "9081592215" });
+  });
+
+  it("fills what the details leave empty from the row, and uses the row alone when there are no details", () => {
+    const sparse = parseDirectoryMemberDetails(detailBody({ cityVillage: null, pinCodeNo: "", fathersname: "" }), 2058);
+    expect(mergeMemberDetails(row, sparse)).toMatchObject({ gam: "VADODARA", pincode: "390002", fatherName: "PRAHLADBHAI", taluko: "SURAT" });
+    expect(mergeMemberDetails(row, null)).toEqual({
+      name: "ASHISHBHAI", fatherName: "PRAHLADBHAI", surname: "PATEL", gam: "VADODARA", taluko: "", jillo: "", region: "", pincode: "390002", mobileNo: "9227136319", dialCode: "+91",
+    });
   });
 });
 
@@ -248,6 +344,71 @@ describe("searchDirectory", () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
     expect(await searchDirectory("x", { limit: 10 })).toEqual({ rows: [], more: false, nextOffset: 0, failed: false });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("getDirectoryMember", () => {
+  const original = { ...process.env };
+
+  beforeEach(() => {
+    process.env.DATABASE_URL = "postgres://x";
+    process.env.SESSION_SECRET = "s".repeat(40);
+    process.env.MEMBER_API_URL = "https://directory.example.org";
+    process.env.MEMBER_API_KEY = "test-key";
+    process.env.MEMBER_API_ORIGIN = "https://my-site.example.org";
+    _resetEnvForTests();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    process.env = { ...original };
+    _resetEnvForTests();
+  });
+
+  it("calls GetMember with the id, the type letter, the key and the app headers, and returns the form details", async () => {
+    const fetchMock = vi.fn(async () => Response.json(detailBody()));
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await getDirectoryMember(2058, "M");
+    expect(result.failed).toBe(false);
+    expect(result.details).toMatchObject({ name: "HARDIK", surname: "GADHAVI", taluko: "SURAT", jillo: "SURAT", region: "GUJARAT" });
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toBe("https://directory.example.org/Member/GetMember?memberId=2058&memberType=M");
+    expect(init.headers).toMatchObject({ apitokenkey: "test-key", appname: "GVHApp", apptype: "GVHWebApp", appversion: "1.0", origin: "https://my-site.example.org" });
+  });
+
+  it("asks for a LoginRequest member with LR", async () => {
+    const fetchMock = vi.fn(async () => Response.json(detailBody({ studentId: 11185 })));
+    vi.stubGlobal("fetch", fetchMock);
+    expect((await getDirectoryMember("11185", "LR")).details).not.toBeNull();
+    expect(String(fetchMock.mock.calls[0][0])).toContain("memberId=11185&memberType=LR");
+  });
+
+  it("makes no call for an unknown type letter or an unusable id (the API would answer with another person)", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    for (const [id, type] of [[2058, "L"], [2058, "LoginRequest"], [2058, ""], [2058, undefined], [0, "M"], [-3, "M"], ["abc", "M"], [1.5, "M"], [null, "M"]]) {
+      expect(await getDirectoryMember(id, type)).toEqual({ details: null, failed: false });
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("reports a failure (and no details) when the directory is down, refuses the call, or has nothing for this member", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("no", { status: 403 })));
+    expect(await getDirectoryMember(2058, "M")).toEqual({ details: null, failed: true });
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("network"); }));
+    expect(await getDirectoryMember(2058, "M")).toEqual({ details: null, failed: true });
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json({ memberInfo: null, isSuccess: true })));
+    expect(await getDirectoryMember(2058, "M")).toEqual({ details: null, failed: true });
+  });
+
+  it("does nothing without a key", async () => {
+    process.env.MEMBER_API_KEY = "  ";
+    _resetEnvForTests();
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    expect(await getDirectoryMember(2058, "M")).toEqual({ details: null, failed: false });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

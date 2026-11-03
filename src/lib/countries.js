@@ -58,21 +58,31 @@ const CITY_ALIASES = { USA: "United States", AMERICA: "United States", UK: "Unit
 
 const upper = (value) => String(value ?? "").toLocaleUpperCase("en-US");
 
+/** The country (CAPITALS) a piece of text names - "CANADA", "AUCKLAND, NEW ZEALAND", "U.S.A." - or "" when it names none. */
+function countryNamedIn(text, names) {
+  const clean = upper(text).replace(/\./g, "");
+  const parts = clean.split(/[,/()]+/).map((part) => part.replace(/\s+/g, " ").trim()).filter(Boolean);
+  const words = clean.split(/[^\p{L}]+/u).filter(Boolean);
+  const candidates = [clean.replace(/[,/()]+/g, " ").replace(/\s+/g, " ").trim(), ...parts.reverse()];
+  return (
+    candidates.find((candidate) => names.has(candidate)) ??
+    upper(CITY_ALIASES[candidates.find((candidate) => CITY_ALIASES[candidate])] ?? CITY_ALIASES[words.find((word) => CITY_ALIASES[word])])
+  );
+}
+
 /**
  * Country and state to pre-fill for someone found in the Members directory, from where they live and their phone number:
  * 1. the city names a country ("CANADA", "AUCKLAND, NEW ZEALAND", "AMERICA N.J", "USA") -> that country (the names of
  *    `countries`, the dropdown list, plus a few aliases), state empty - this also settles +1 (USA or Canada);
- * 2. else the dial code decides, see `placeFromDialCode`.
+ * 2. else the `region` does: the directory's state box holds the STATE of an Indian member ("GUJARAT") but the COUNTRY of one
+ *    abroad ("U.K.", "U.S.A.", "AUSTRALIA"), so a region that names a country is that country;
+ * 3. else the dial code decides, see `placeFromDialCode`.
+ * (A state of India is never confused with a country, so an Indian `region` falls through to the dial code and is used by the
+ * caller as the state.)
  */
-export function placeFromMember({ city, dialCode } = {}, countries = []) {
+export function placeFromMember({ city, region, dialCode } = {}, countries = []) {
   const names = new Set(countries.map(upper));
-  const clean = upper(city).replace(/\./g, "");
-  const parts = clean.split(/[,/()]+/).map((part) => part.replace(/\s+/g, " ").trim()).filter(Boolean);
-  const words = clean.split(/[^\p{L}]+/u).filter(Boolean);
-  const candidates = [clean.replace(/[,/()]+/g, " ").replace(/\s+/g, " ").trim(), ...parts.reverse()];
-  const country =
-    candidates.find((text) => names.has(text)) ??
-    upper(CITY_ALIASES[candidates.find((text) => CITY_ALIASES[text])] ?? CITY_ALIASES[words.find((word) => CITY_ALIASES[word])]);
+  const country = countryNamedIn(city, names) || countryNamedIn(region, names);
   if (country) return { country, state: country === DEFAULT_COUNTRY ? DEFAULT_STATE : "" };
   return placeFromDialCode(dialCode);
 }

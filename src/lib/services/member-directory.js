@@ -1,11 +1,13 @@
 import "server-only";
 import { getEnv } from "@/lib/env";
-import { parseDirectoryMembers } from "@/lib/member-api";
+import { DETAIL_TYPE_CODES, parseDirectoryMemberDetails, parseDirectoryMembers } from "@/lib/member-api";
 
 // Sent with every call, as the Members app does.
 const APP_HEADERS = { appname: "GVHApp", apptype: "GVHWebApp", appversion: "1.0" };
 // Even the biggest page asked for (the ceiling, 5000 rows) comes back in a few seconds; the whole directory ("a": 26,000 rows) would take 15-30.
 const TIMEOUT_MS = 25_000;
+// One member's details come back in well under a second; the form should not wait long for them.
+const DETAIL_TIMEOUT_MS = 10_000;
 
 /** `Origin` + `Referer` headers for the whitelisted domain from MEMBER_API_ORIGIN (a server call sends neither by itself). Invalid / empty = none. */
 function originHeaders(value) {
@@ -61,5 +63,39 @@ export async function searchDirectory(keyword, { limit, offset = 0, signal }) {
     if (signal?.aborted) return { ...nothing, failed: false }; // cancelled on purpose, nobody is waiting for the answer
     console.warn("[members] directory search failed:", error.message);
     return { ...nothing, failed: true };
+  }
+}
+
+/**
+ * The full details of ONE directory member (`GET {MEMBER_API_URL}/Member/GetMember?memberId=&memberType=`), from the SERVER like the
+ * search (the key stays here). `typeCode` is "M" (Member) or "LR" (LoginRequest) - see `typeCode` of the search rows; any other
+ * letter is refused without a call, because the API would answer with another person. Returns { details, failed }: `details` are the
+ * form fields of `parseDirectoryMemberDetails` (null when there are none); `failed` is true when the directory could not be reached,
+ * refused the call, or had nothing for this member, so the caller can say that only the search data is used. Without
+ * MEMBER_API_KEY nothing is called and nothing is a failure.
+ */
+export async function getDirectoryMember(memberId, typeCode) {
+  const { MEMBER_API_URL, MEMBER_API_KEY, MEMBER_API_ORIGIN } = getEnv();
+  const apiKey = MEMBER_API_KEY.trim();
+  const id = Number(memberId);
+  if (!apiKey || !Number.isInteger(id) || id <= 0 || !DETAIL_TYPE_CODES.has(typeCode)) return { details: null, failed: false };
+  try {
+    const url = new URL("/Member/GetMember", MEMBER_API_URL);
+    url.searchParams.set("memberId", String(id));
+    url.searchParams.set("memberType", typeCode);
+    const response = await fetch(url, {
+      headers: { ...APP_HEADERS, ...originHeaders(MEMBER_API_ORIGIN), apitokenkey: apiKey },
+      cache: "no-store",
+      signal: AbortSignal.timeout(DETAIL_TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      console.warn(`[members] directory member answered ${response.status}`);
+      return { details: null, failed: true };
+    }
+    const details = parseDirectoryMemberDetails(await response.json(), id);
+    return { details, failed: details === null };
+  } catch (error) {
+    console.warn("[members] directory member failed:", error.message);
+    return { details: null, failed: true };
   }
 }
