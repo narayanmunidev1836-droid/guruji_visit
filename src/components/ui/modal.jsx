@@ -8,8 +8,10 @@ import { X } from "lucide-react";
  * Modal dialog (native <dialog>: focus stays inside, Esc closes). It sits in the top layer but still INHERITS text styles from
  * where it is rendered in the DOM (e.g. a `text-right` table cell), so it resets the text alignment itself. Render it only while it should be open and unmount it to
  * close it; `onClose` is also called when the user closes it (X, Esc or a click outside) so the parent can unmount it.
+ * A Modal may be opened from inside another one: closing it only calls ITS `onClose`, never the outer dialog's. (A click inside the inner
+ * one still bubbles through the React tree, so whoever renders it inside a clickable row must stop that click - see `MemberAvatar`.)
  */
-export function Modal({ title, onClose, wide = false, wider = false, fixed = false, children }) {
+export function Modal({ title, onClose, narrow = false, wide = false, wider = false, fixed = false, children }) {
   const ref = useRef(null);
   const titleId = useId();
 
@@ -21,23 +23,30 @@ export function Modal({ title, onClose, wide = false, wider = false, fixed = fal
   return (
     <dialog
       ref={ref}
-      onClose={onClose}
+      onClose={(event) => {
+        // A native `close` event does not bubble, but React passes it up the COMPONENT tree. A dialog opened from inside another one (the
+        // photo over "Select Member") would otherwise also call the outer dialog's `onClose` and unmount it with everything on it.
+        event.stopPropagation();
+        onClose?.();
+      }}
       onClick={(event) => {
         if (event.target === ref.current) ref.current.close(); // click on the backdrop
       }}
       aria-labelledby={titleId}
       className={clsx(
-        "m-auto max-h-[calc(100dvh-2rem)] rounded-2xl border border-border bg-surface p-0 text-left text-foreground shadow-2xl backdrop:bg-black/50",
+        // cursor-auto: the dialog inherits `cursor` from where it is rendered in the DOM (the photo opens from a `cursor-pointer` table row),
+        // so it sets the normal cursor itself; the buttons and links inside ask for the pointer on their own.
+        "m-auto max-h-[calc(100dvh-2rem)] cursor-auto rounded-2xl border border-border bg-surface p-0 text-left text-foreground shadow-2xl backdrop:bg-black/50",
         // fixed: constant height, only the content inside scrolls (header and the caller's top / bottom rows stay put)
         fixed ? "h-[min(44rem,calc(100dvh-2rem))] overflow-hidden open:flex open:flex-col" : "overflow-auto",
-        wider ? "w-[min(80rem,calc(100vw-2rem))]" : wide ? "w-[min(64rem,calc(100vw-2rem))]" : "w-[min(48rem,calc(100vw-2rem))]",
+        wider ? "w-[min(80rem,calc(100vw-2rem))]" : wide ? "w-[min(64rem,calc(100vw-2rem))]" : narrow ? "w-[min(24rem,calc(100vw-2rem))]" : "w-[min(48rem,calc(100vw-2rem))]",
       )}
     >
       <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-5 py-3">
         <h2 id={titleId} className="text-lg font-semibold">
           {title}
         </h2>
-        <button type="button" onClick={() => ref.current?.close()} aria-label="Close" title="Close" className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-surface-muted hover:text-foreground">
+        <button type="button" onClick={() => ref.current?.close()} aria-label="Close" title="Close" className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-muted hover:bg-surface-muted hover:text-foreground">
           <X className="h-4 w-4" aria-hidden />
         </button>
       </div>

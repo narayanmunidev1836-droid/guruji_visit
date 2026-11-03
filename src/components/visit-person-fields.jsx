@@ -239,7 +239,7 @@ function PersonSearchModal({ canSeeMobile, loading, onSelect, onPickDirectory, o
                     {showDirectory && <td className="px-4 py-2.5">{p.source === "directory" ? <Highlight text={String(p.displayMemberId)} query={shownFor} /> : ""}</td>}
                     <td className="px-4 py-2.5 font-medium">
                       <div className="flex items-center gap-3">
-                        <MemberAvatar name={p.name} surname={p.surname} photoUrl={p.photoUrl} />
+                        <MemberAvatar name={p.name} surname={p.surname} photoUrl={p.photoUrl} zoomable />
                         <button type="button" onClick={(event) => { event.stopPropagation(); choose(p); }} className="text-left text-foreground hover:underline">
                           <Highlight text={[p.name, p.fatherName, p.surname].filter(Boolean).join(" ")} query={shownFor} />
                         </button>
