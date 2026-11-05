@@ -13,6 +13,7 @@ export const LATEST_PAGE_SIZE = 10;
 const MAX_PAGE = 5000;
 
 const PLACE_TYPES = ["HOME", "OFFICE", "TEMPLE", "OTHER"];
+const MEDIA_TYPES = ["PHOTO", "VIDEO"];
 
 function positiveInt(value) {
   const n = Number(value);
@@ -25,6 +26,7 @@ export function parseSearchParams(raw) {
   const dateFrom = parseDateInput(text("dateFrom"));
   const dateTo = parseDateInput(text("dateTo"));
   const placeType = text("placeType");
+  const mediaType = text("mediaType");
   const page = Math.min(positiveInt(text("page")) ?? 1, MAX_PAGE);
 
   return {
@@ -45,6 +47,7 @@ export function parseSearchParams(raw) {
     hardDiskId: positiveInt(text("hardDiskId")),
     haribhagatId: positiveInt(text("haribhagatId")),
     placeType: PLACE_TYPES.includes(placeType) ? placeType : null,
+    mediaType: MEDIA_TYPES.includes(mediaType) ? mediaType : null, // entries whose path holds photos / videos
     folder: text("folder")?.toLocaleUpperCase("en-US") ?? null, // folders are stored in CAPITALS
     page,
   };
@@ -68,6 +71,7 @@ export function filtersToParams(filters) {
     hardDiskId: filters.hardDiskId ?? undefined,
     haribhagatId: filters.haribhagatId ?? undefined,
     placeType: filters.placeType ?? undefined,
+    mediaType: filters.mediaType ?? undefined,
     folder: filters.folder ?? undefined,
   };
 }
@@ -109,6 +113,7 @@ export function buildVisitWhere(filters, { allowMobile }) {
   if (filters.haribhagatId) and.push({ haribhagats: { some: { haribhagatId: filters.haribhagatId } } });
   if (filters.eventId) and.push({ eventId: filters.eventId });
   if (filters.placeType) and.push({ placeType: filters.placeType });
+  if (filters.mediaType) and.push({ mediaType: filters.mediaType });
   if (filters.hardDiskId) and.push({ hardDiskId: filters.hardDiskId });
   if (filters.folder) {
     and.push({ OR: [{ folderPath: filters.folder }, { folderPath: { startsWith: `${filters.folder}/` } }] });

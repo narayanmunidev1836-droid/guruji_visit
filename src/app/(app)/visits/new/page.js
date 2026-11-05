@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/auth/dal";
 import { getEnv } from "@/lib/env";
 import { t } from "@/lib/labels";
 import { can, canViewMobile } from "@/lib/permissions";
-import { placeTypeOptions } from "@/lib/ui-labels";
+import { mediaTypeOptions, placeTypeOptions } from "@/lib/ui-labels";
 import { listActiveDisks } from "@/lib/services/disks";
 import { listActiveEvents } from "@/lib/services/events";
 import { listCountries } from "@/lib/services/countries";
@@ -43,6 +43,7 @@ export default async function NewVisitPage({ searchParams }) {
               events={events}
               disks={disks}
               placeTypes={placeTypeOptions()}
+              mediaTypes={mediaTypeOptions()}
             countries={countries}
             recentDiskIds={recent.diskIds}
             recentEventIds={recent.eventIds}
@@ -78,6 +79,7 @@ export default async function NewVisitPage({ searchParams }) {
                 pincode: t("pincode"),
                 mobileNo: t("mobileNo"),
                 hardDiskName: t("hardDiskName"),
+                mediaType: t("mediaType"),
                 folder: t("folder"),
                 eventName: t("eventName"),
                 date: t("date"),

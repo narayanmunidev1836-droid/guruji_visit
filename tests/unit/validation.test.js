@@ -40,7 +40,7 @@ describe("haribhagat validation", () => {
 });
 
 describe("visit validation", () => {
-  const valid = { haribhagatIds: ["1", "2"], hardDiskId: "4", folderPath: "MUKT SWAMI DATA/decstop", eventId: "3", visitDate: "2019-03-14", placeType: "HOME" };
+  const valid = { haribhagatIds: ["1", "2"], hardDiskId: "4", mediaType: "PHOTO", folderPath: "MUKT SWAMI DATA/decstop", eventId: "3", visitDate: "2019-03-14", placeType: "HOME" };
 
   it("coerces form strings to numbers; notes are optional", () => {
     const result = validate(visitSchema, valid);
@@ -54,6 +54,13 @@ describe("visit validation", () => {
   it("requires a Haribhagat and a hard disk", () => {
     expect(validate(visitSchema, { ...valid, haribhagatIds: [] }).fieldErrors.haribhagatIds).toBe("Choose at least one Member.");
     expect(validate(visitSchema, { ...valid, hardDiskId: "" }).fieldErrors.hardDiskId).toBeTruthy();
+  });
+
+  it("requires Photo or Video and rejects anything else", () => {
+    expect(validate(visitSchema, { ...valid, mediaType: "VIDEO" }).data.mediaType).toBe("VIDEO");
+    expect(validate(visitSchema, { ...valid, mediaType: "" }).fieldErrors.mediaType).toBe("Choose Photo or Video.");
+    expect(validate(visitSchema, { ...valid, mediaType: undefined }).fieldErrors.mediaType).toBe("Choose Photo or Video.");
+    expect(validate(visitSchema, { ...valid, mediaType: "AUDIO" }).ok).toBe(false);
   });
 
   it("requires event, date and place", () => {

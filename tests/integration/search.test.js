@@ -66,6 +66,7 @@ describe.skipIf(!HAS_DB)("visit search", () => {
         visitDate: day("2019-07-02"),
         placeType: "TEMPLE",
         hardDiskId: d2.id,
+        mediaType: "VIDEO", // the other two entries are photos (the default)
         folderPath: "VICHRAN/JULY",
         haribhagats: { create: [{ haribhagatId: suresh.id, isPrimary: true }, { haribhagatId: ramesh.id }] },
       },
@@ -121,6 +122,18 @@ describe.skipIf(!HAS_DB)("visit search", () => {
     expect((await run({ dateFrom: "2019-03-14", dateTo: "2019-03-14" })).total).toBe(1);
     expect((await run({ folder: "Vichran" })).total).toBe(1);
     expect((await run({ haribhagatId: String(suresh.id) })).total).toBe(2);
+  });
+
+  it("filters by Photo / Video and returns the type with every entry", async () => {
+    expect(folders(await run({ mediaType: "VIDEO" }))).toEqual(["VICHRAN/JULY"]);
+    expect((await run({ mediaType: "PHOTO" })).total).toBe(2);
+    expect((await run({ mediaType: "AUDIO" })).latest).toBe(true); // an unknown type is dropped, so nothing is filtered
+    const both = await run({ surname: "patel" });
+    expect(both.items.map((v) => [v.folderPath, v.mediaType]).sort()).toEqual([
+      ["2019/MARCH/PATEL HOME", "PHOTO"],
+      ["VICHRAN/JULY", "VIDEO"],
+    ]);
+    expect((await run({ surname: "patel", mediaType: "VIDEO" })).total).toBe(1);
   });
 
   it("only users who may see mobile numbers can search by mobile", async () => {

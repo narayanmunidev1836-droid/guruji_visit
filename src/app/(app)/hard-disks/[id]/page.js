@@ -8,6 +8,7 @@ import { getDisk } from "@/lib/services/disks";
 import { listVisits } from "@/lib/services/visits";
 import { personName } from "@/lib/ui-labels";
 import { Badge } from "@/components/ui/badge";
+import { MediaTypeBadge } from "@/components/visit-card";
 import { Card, CardBody, CardHeader, EmptyState, PageHeader } from "@/components/ui/card";
 import { Table, Td, Th } from "@/components/ui/table";
 import { EditDiskForm } from "@/app/(app)/hard-disks/disk-forms";
@@ -64,7 +65,7 @@ export default async function HardDiskPage({ params }) {
       </div>
 
       <Card className="mt-6">
-        <CardHeader title="Visits stored on this disk" description="Path and Member of every visit that uses this disk." />
+        <CardHeader title="Visits stored on this disk" description="Photo / Video path and Member of every visit that uses this disk." />
         {visits.items.length === 0 ? (
           <CardBody>
             <EmptyState title="No visits use this disk yet" />
@@ -82,9 +83,12 @@ export default async function HardDiskPage({ params }) {
               {visits.items.map((visit) => (
                 <tr key={visit.id}>
                   <Td className="font-mono text-xs">
-                    <Link href={`/visits/${visit.id}`} className="text-primary hover:underline">
-                      {visit.folderPath || "(disk root)"}
-                    </Link>
+                    <div className="flex items-start gap-2">
+                      <MediaTypeBadge type={visit.mediaType} />
+                      <Link href={`/visits/${visit.id}`} className="break-all text-primary hover:underline">
+                        {visit.folderPath || "(disk root)"}
+                      </Link>
+                    </div>
                   </Td>
                   <Td>{visit.haribhagats.map(({ haribhagat }) => personName(haribhagat)).join(", ")}</Td>
                   <Td className="whitespace-nowrap">{formatDate(visit.visitDate)}</Td>

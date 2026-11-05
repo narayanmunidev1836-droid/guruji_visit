@@ -41,6 +41,7 @@ const DICTIONARY = {
   notes: "Notes",
   photos: "Photos",
   photo: "Photo",
+  mediaType: "Photo / Video",
   label: "Sticker label",
   description: "Description",
   email: "Email",
@@ -52,6 +53,10 @@ const DICTIONARY = {
   OFFICE: "Office",
   TEMPLE: "Temple",
   OTHER: "Other",
+
+  // media types (what an entry's path holds)
+  PHOTO: "Photo",
+  VIDEO: "Video",
 
   // actions
   searchAction: "Search",

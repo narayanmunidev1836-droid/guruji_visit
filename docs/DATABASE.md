@@ -35,7 +35,8 @@ Never deleted — deactivate (`isActive=false`). A session stops working as soon
 * `lastSeenAt` is the **only** source of "connected" (see availability rule). Renaming the label keeps `id` ⇒ all photos stay linked.
 
 ### Visit
-`id, eventId (→Event, Restrict), visitDate (DATE), placeType? (HOME|OFFICE|TEMPLE|OTHER), notes?, createdById?, timestamps`. Indexes: visitDate, eventId.
+`id, eventId (→Event, Restrict), visitDate (DATE), placeType? (HOME|OFFICE|TEMPLE|OTHER), hardDiskId? (→HardDisk, Restrict), folderPath (relative to the disk root), mediaType (PHOTO|VIDEO, default PHOTO), notes?, createdById?, timestamps`. Indexes: visitDate, eventId, hardDiskId, mediaType.
+`mediaType` says what `folderPath` holds: the photos or the videos of the visit. They are kept in different paths, so a visit that has both is two entries (same Member, same disk, two paths). Migration `20261105120000_visit_media_type` (existing rows become PHOTO).
 A visit = "Guruji's Pathramani at Patel family's home on 14 Mar 2019". It has **many Haribhagats** and **many photos**.
 
 ### VisitHaribhagat (join)

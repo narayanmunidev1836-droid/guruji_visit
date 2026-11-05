@@ -71,6 +71,9 @@ export const booleanField = z.preprocess(
 
 export const PLACE_TYPES = ["HOME", "OFFICE", "TEMPLE", "OTHER"];
 
+/** What an entry's path holds: its photos or its videos (they are kept in different paths). */
+export const MEDIA_TYPES = ["PHOTO", "VIDEO"];
+
 export const optionalPlaceType = z.preprocess(
   (v) => (v === "" || v === null || v === undefined ? null : v),
   z.enum(PLACE_TYPES, { error: "Choose a valid place type." }).nullable(),

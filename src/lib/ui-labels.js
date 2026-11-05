@@ -6,6 +6,13 @@ export function placeTypeOptions() {
   return PLACE_TYPE_OPTIONS.map((value) => ({ value, label: t(value) }));
 }
 
+export const MEDIA_TYPE_OPTIONS = ["PHOTO", "VIDEO"];
+
+/** Options of the "Photo / Video" dropdown (form and search filter). */
+export function mediaTypeOptions() {
+  return MEDIA_TYPE_OPTIONS.map((value) => ({ value, label: t(value) }));
+}
+
 /** "Name Father Surname" for display. */
 export function personName(p) {
   return [p.name, p.fatherName, p.surname].filter(Boolean).join(" ");

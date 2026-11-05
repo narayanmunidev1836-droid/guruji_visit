@@ -5,7 +5,7 @@ import { t } from "@/lib/labels";
 import { getRecentlyUsed, getVisit } from "@/lib/services/visits";
 import { listDisksForSelect } from "@/lib/services/disks";
 import { listEventsForSelect } from "@/lib/services/events";
-import { personName, placeTypeOptions } from "@/lib/ui-labels";
+import { mediaTypeOptions, personName, placeTypeOptions } from "@/lib/ui-labels";
 import { Card, CardBody, PageHeader } from "@/components/ui/card";
 import { VisitForm } from "@/components/visit-form";
 
@@ -33,6 +33,7 @@ export default async function EditVisitPage({ params }) {
               id: visit.id,
               eventId: visit.eventId,
               hardDiskId: visit.hardDiskId,
+              mediaType: visit.mediaType,
               folderPath: visit.folderPath,
               visitDate: visit.visitDate ? visit.visitDate.toISOString().slice(0, 10) : "",
               placeType: visit.placeType,
@@ -42,12 +43,14 @@ export default async function EditVisitPage({ params }) {
             events={events}
             disks={disks}
             placeTypes={placeTypeOptions()}
+            mediaTypes={mediaTypeOptions()}
             selectedPeople={people}
             recentDiskIds={recent.diskIds}
             recentEventIds={recent.eventIds}
             labels={{
               haribhagats: t("haribhagats"),
               hardDiskName: t("hardDiskName"),
+              mediaType: t("mediaType"),
               folder: t("folder"),
               eventName: t("eventName"),
               date: t("date"),

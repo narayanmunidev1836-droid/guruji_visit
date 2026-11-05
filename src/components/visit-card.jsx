@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, Eye, FolderOpen, HardDrive, MapPin, Pencil, StickyNote } from "lucide-react";
+import { CalendarDays, Eye, FolderOpen, HardDrive, Image as ImageIcon, MapPin, Pencil, StickyNote, Video } from "lucide-react";
 import { t } from "@/lib/labels";
 import { formatDate } from "@/lib/format";
 import { personName } from "@/lib/ui-labels";
@@ -7,9 +7,20 @@ import { Badge } from "@/components/ui/badge";
 import { CopyButton } from "@/components/copy-button";
 import { DeleteVisitButton } from "@/components/delete-visit-button";
 
+/** "Photo" / "Video" tag of an entry (what its path holds). */
+export function MediaTypeBadge({ type }) {
+  const Icon = type === "VIDEO" ? Video : ImageIcon;
+  return (
+    <Badge tone="neutral" className="shrink-0">
+      <Icon className="h-3 w-3" aria-hidden />
+      {t(type === "VIDEO" ? "VIDEO" : "PHOTO")}
+    </Badge>
+  );
+}
+
 /**
- * Where the photos are: the hard disk (sticker label) and, below it, the path inside the disk. The copy button on the right
- * copies only the path.
+ * Where the photos or videos are: a Photo / Video tag, the hard disk (sticker label) and, below it, the path inside the disk.
+ * The copy button on the right copies only the path.
  */
 export function VisitLocation({ visit, copy = true }) {
   if (!visit.hardDisk) return <span className="text-sm text-muted">No hard disk recorded</span>;
@@ -19,7 +30,10 @@ export function VisitLocation({ visit, copy = true }) {
         <HardDrive className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="break-all text-sm font-bold tracking-wide text-primary">{visit.hardDisk.labelName}</p>
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="break-all text-sm font-bold tracking-wide text-primary">{visit.hardDisk.labelName}</span>
+          <MediaTypeBadge type={visit.mediaType} />
+        </p>
         {visit.folderPath ? (
           <p className="mt-0.5 flex items-start gap-1.5 text-sm text-foreground" title="Path">
             <FolderOpen className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden />
@@ -37,7 +51,7 @@ export function VisitLocation({ visit, copy = true }) {
 const iconLink = "inline-grid h-8 w-8 place-items-center rounded-lg text-primary hover:bg-primary-soft";
 
 /**
- * One entry: who, where the photos are kept (disk + path), event / date / place and notes; View / Edit / Delete when allowed.
+ * One entry: who, where the photos or videos are kept (type + disk + path), event / date / place and notes; View / Edit / Delete when allowed.
  * `hidePersonId`: on that Member's own page their name and village are left out (only the other people of a shared entry are named).
  */
 export function VisitCard({ visit, canEdit = false, hidePersonId = null }) {

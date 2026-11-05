@@ -38,6 +38,7 @@ async function savedSummary(user, visitId) {
     visitDate: visit.visitDate ? formatDate(visit.visitDate) : null,
     place: visit.placeType ? t(visit.placeType) : null,
     disk: visit.hardDisk?.labelName ?? null,
+    mediaType: t(visit.mediaType), // "Photo" / "Video"
     folder: visit.folderPath,
     notes: visit.notes,
   };

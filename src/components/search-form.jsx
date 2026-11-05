@@ -1,6 +1,6 @@
 import { Search } from "lucide-react";
 import { t } from "@/lib/labels";
-import { placeTypeOptions } from "@/lib/ui-labels";
+import { mediaTypeOptions, placeTypeOptions } from "@/lib/ui-labels";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DebounceInput } from "@/components/ui/debounce-input";
@@ -24,7 +24,7 @@ function F({ label, children, className }) {
 export function SearchForm({ values, events, disks, allowMobile }) {
   const eventOptions = events.map((e) => ({ value: e.id, label: e.isActive ? e.name : `${e.name} (${t("inactive")})` }));
   const diskOptions = disks.map((d) => ({ value: d.id, label: d.isActive ? d.labelName : `${d.labelName} (${t("inactive")})` }));
-  const applied = ["name", "fatherName", "surname", "gam", "taluko", "jillo", "pincode", "mobileNo", "dateFrom", "dateTo", "eventId", "hardDiskId", "placeType", "folder"].filter(
+  const applied = ["name", "fatherName", "surname", "gam", "taluko", "jillo", "pincode", "mobileNo", "dateFrom", "dateTo", "eventId", "hardDiskId", "placeType", "mediaType", "folder"].filter(
     (k) => values[k] !== undefined && values[k] !== null && values[k] !== "",
   ).length;
 
@@ -93,6 +93,9 @@ export function SearchForm({ values, events, disks, allowMobile }) {
           </F>
           <F label={t("placeType")}>
             <Select name="placeType" defaultValue={values.placeType ?? ""} options={placeTypeOptions()} placeholder={t("all")} />
+          </F>
+          <F label={t("mediaType")}>
+            <Select name="mediaType" defaultValue={values.mediaType ?? ""} options={mediaTypeOptions()} placeholder={t("all")} />
           </F>
           <F label="Path (on disk)" className="sm:col-span-2">
             <Input name="folder" defaultValue={values.folder ?? ""} placeholder="e.g. 2019/March" />

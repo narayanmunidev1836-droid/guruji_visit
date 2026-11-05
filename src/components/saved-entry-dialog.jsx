@@ -73,6 +73,7 @@ export function SavedEntryDialog({ onClose }) {
           <Row label="Event">{saved.event}</Row>
           <Row label="Place">{saved.place}</Row>
           <Row label="Hard disk">{saved.disk}</Row>
+          <Row label="Photo / Video">{saved.mediaType}</Row>
           <Row label="Path">{saved.folder}</Row>
           <Row label="Notes">{saved.notes && <span className="whitespace-pre-line">{saved.notes}</span>}</Row>
         </dl>

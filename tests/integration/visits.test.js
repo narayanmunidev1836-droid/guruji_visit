@@ -27,6 +27,7 @@ describe.skipIf(!HAS_DB)("visits (Haribhagat + hard disk + folder)", () => {
   const base = (extra = {}) => ({
     haribhagatIds: [String(ramesh.id)],
     hardDiskId: String(disk.id),
+    mediaType: "PHOTO",
     folderPath: "MUKT SWAMI DATA/decstop",
     eventId: String(event.id),
     visitDate: "2019-03-14",
@@ -44,6 +45,31 @@ describe.skipIf(!HAS_DB)("visits (Haribhagat + hard disk + folder)", () => {
     expect(visit.visitDate.toISOString().slice(0, 10)).toBe("2019-03-14");
     expect(visit.haribhagats.map((l) => [l.haribhagatId, l.isPrimary])).toEqual([[ramesh.id, true]]);
     expect(visit.createdBy.name).toBe(staff.name);
+  });
+
+  it("stores whether the path holds photos or videos, and requires the choice", async () => {
+    const photo = await svc.createVisit(staff, base());
+    expect((await svc.getVisit(photo.visit.id)).mediaType).toBe("PHOTO");
+    // the same Member and visit date can have a second entry for the videos, in another path on the same disk
+    const video = await svc.createVisit(staff, base({ mediaType: "VIDEO", folderPath: "MUKT SWAMI DATA/decstop VIDEO" }));
+    expect(video.ok).toBe(true);
+    const saved = await svc.getVisit(video.visit.id);
+    expect([saved.mediaType, saved.folderPath, saved.hardDisk.labelName]).toEqual(["VIDEO", "MUKT SWAMI DATA/DECSTOP VIDEO", "HDD-001"]);
+
+    for (const mediaType of ["", "AUDIO"]) {
+      const result = await svc.createVisit(staff, base({ mediaType }));
+      expect(result.ok).toBe(false);
+      expect(result.fieldErrors.mediaType).toBeTruthy();
+    }
+    expect(await db.visit.count()).toBe(2);
+  });
+
+  it("can change an entry from photo to video", async () => {
+    const created = (await svc.createVisit(staff, base())).visit;
+    expect((await svc.updateVisit(staff, created.id, base({ mediaType: "VIDEO", folderPath: "videos" }))).ok).toBe(true);
+    const visit = await svc.getVisit(created.id);
+    expect([visit.mediaType, visit.folderPath]).toEqual(["VIDEO", "VIDEOS"]);
+    expect((await svc.updateVisit(staff, created.id, base({ mediaType: "" }))).fieldErrors.mediaType).toBeTruthy();
   });
 
   it("accepts a pasted Windows path: the drive letter is dropped and separators are unified", async () => {
@@ -132,6 +158,7 @@ describe.skipIf(!HAS_DB)("visits (Haribhagat + hard disk + folder)", () => {
     expect(list.total).toBe(3);
     expect(list.items.map((v) => v.folderPath)).toEqual(["new", "old", "oldest"]);
     expect(list.items[0].hardDisk.labelName).toBe("HDD-001");
+    expect(list.items.every((v) => v.mediaType === "PHOTO")).toBe(true);
     expect((await svc.listVisits({ hardDiskId: disk.id })).total).toBe(3);
   });
 });

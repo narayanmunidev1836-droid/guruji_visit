@@ -22,6 +22,12 @@ enum PlaceType {
   OTHER
 }
 
+// What an entry's path holds: the photos or the videos of the visit (they are kept in different paths).
+enum MediaType {
+  PHOTO
+  VIDEO
+}
+
 // What the last known scan says about the original file.
 // UNKNOWN = never verified by an indexer, AVAILABLE = seen in the latest full scan,
 // MISSING = was indexed before but not found in a later complete scan of its disk.
@@ -123,14 +129,17 @@ model HardDisk {
 }
 
 // One visit (e.g. a Pathramani at a Haribhagat home) belongs to one or more Haribhagats and records WHERE the
-// photos of that visit are kept: a hard disk + a folder path inside it (typed by staff; nothing is indexed).
+// photos OR the videos of that visit are kept: a hard disk + a folder path inside it (typed by staff; nothing is indexed).
+// Photos and videos live in different paths, so each is its own entry: `mediaType` says which one this entry's path holds.
 model Visit {
   id          Int        @id @default(autoincrement())
   eventId     Int?
   visitDate   DateTime?  @db.Date
-  // Where the photos are kept: hard disk + folder relative to the disk root ("" = disk root). Never a drive letter.
+  // Where the files are kept: hard disk + folder relative to the disk root ("" = disk root). Never a drive letter.
   hardDiskId  Int?
   folderPath  String     @default("")
+  // Photos or videos (entries created before this existed hold photos).
+  mediaType   MediaType  @default(PHOTO)
   placeType   PlaceType?
   notes       String?
   createdById Int?
@@ -146,6 +155,7 @@ model Visit {
   @@index([visitDate])
   @@index([eventId])
   @@index([hardDiskId])
+  @@index([mediaType])
 }
 
 model VisitHaribhagat {

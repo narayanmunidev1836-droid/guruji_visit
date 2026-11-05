@@ -100,6 +100,14 @@ describe("buildVisitWhere", () => {
     expect(where.AND).toEqual(expect.arrayContaining([{ eventId: 4 }, { hardDiskId: 2 }, { placeType: "HOME" }]));
   });
 
+  it("filters by Photo / Video", () => {
+    expect(parseSearchParams({ mediaType: "VIDEO" }).mediaType).toBe("VIDEO");
+    expect(parseSearchParams({ mediaType: "AUDIO" }).mediaType).toBeNull();
+    expect(hasSearchFilters(parseSearchParams({ mediaType: "PHOTO" }))).toBe(true);
+    expect(filtersToParams(parseSearchParams({ mediaType: "VIDEO" })).mediaType).toBe("VIDEO");
+    expect(buildVisitWhere({ ...base, mediaType: "VIDEO" }, allow).AND).toEqual([{ mediaType: "VIDEO" }]);
+  });
+
   it("filters by visit date (inclusive)", () => {
     const from = new Date("2019-03-01T00:00:00Z");
     const to = new Date("2019-03-31T00:00:00Z");

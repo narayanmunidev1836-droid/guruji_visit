@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { fail, ok, validate } from "@/lib/result";
 import { parseDateInput } from "@/lib/format";
 import { normalizeFolderPath, InvalidPathError } from "@/lib/paths";
-import { idField, optionalIdField, optionalText, PLACE_TYPES } from "@/lib/validation";
+import { idField, MEDIA_TYPES, optionalIdField, optionalText, PLACE_TYPES } from "@/lib/validation";
 import { makeDupKey } from "@/lib/normalize";
 import { audit } from "@/lib/services/audit";
 import { findPossibleDuplicates, haribhagatSchema } from "@/lib/services/haribhagats";
@@ -35,6 +35,7 @@ const requiredDate = z.preprocess(
 const visitFields = {
   primaryHaribhagatId: optionalIdField,
   hardDiskId: idField("Hard disk"),
+  mediaType: z.enum(MEDIA_TYPES, { error: "Choose Photo or Video." }), // what the path holds: photos or videos
   folderPath: z.any().optional(),
   eventId: idField("Event"),
   visitDate: requiredDate,
@@ -90,7 +91,7 @@ async function checkDiskAndEvent(data, current) {
 const hasIds = (value) => (Array.isArray(value) ? value : value ? [value] : []).filter((v) => String(v).trim() !== "").length > 0;
 
 /**
- * Creates a visit: the Haribhagat + the hard disk and folder where the photos of that visit are kept.
+ * Creates a visit: the Haribhagat + the hard disk and folder where the photos OR the videos (`mediaType`) of that visit are kept.
  * The Haribhagat is either an existing person (`haribhagatIds`) or typed in with the visit (name, surname, ...): then a new
  * Haribhagat is created together with the visit. Similar existing people only produce a warning (`confirmDuplicate`).
  */
@@ -138,6 +139,7 @@ export async function createVisit(actor, input, { confirmDuplicate = false, canE
         eventId: data.eventId,
         visitDate: data.visitDate,
         hardDiskId: data.hardDiskId,
+        mediaType: data.mediaType,
         folderPath: folder.folder,
         placeType: data.placeType,
         notes: data.notes,
@@ -146,7 +148,7 @@ export async function createVisit(actor, input, { confirmDuplicate = false, canE
       },
     });
   });
-  await audit(actor, "visit.create", "Visit", visit.id, { disk: checked.disk.labelName, folder: folder.folder });
+  await audit(actor, "visit.create", "Visit", visit.id, { type: data.mediaType, disk: checked.disk.labelName, folder: folder.folder });
   const primary = links.find((l) => l.isPrimary) ?? links[0];
   return ok({ visit, haribhagatId: primary?.haribhagatId ?? null });
 }
@@ -172,6 +174,7 @@ export async function updateVisit(actor, id, input) {
         eventId: data.eventId,
         visitDate: data.visitDate,
         hardDiskId: data.hardDiskId,
+        mediaType: data.mediaType,
         folderPath: folder.folder,
         placeType: data.placeType,
         notes: data.notes,
@@ -189,7 +192,7 @@ export async function deleteVisit(actor, id) {
   const current = await db.visit.findUnique({ where: { id }, include: { hardDisk: { select: { labelName: true } } } });
   if (!current) return fail("Entry not found.");
   await db.visit.delete({ where: { id } });
-  await audit(actor, "visit.delete", "Visit", id, { disk: current.hardDisk?.labelName ?? null, folder: current.folderPath });
+  await audit(actor, "visit.delete", "Visit", id, { type: current.mediaType, disk: current.hardDisk?.labelName ?? null, folder: current.folderPath });
   return ok();
 }
 
