@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
+import { Image as ImageIcon, Video } from "lucide-react";
 import { createVisitAction, updateVisitAction } from "@/actions/visits";
-import { ActionForm, Field, FormActions, SubmitButton } from "@/components/ui/form";
+import { ActionForm, Field, FormActions, SubmitButton, useFormState } from "@/components/ui/form";
 import { buttonClasses } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input, Textarea } from "@/components/ui/inputs";
@@ -35,6 +36,44 @@ export function VisitForm(props) {
         window.scrollTo({ top: 0 });
       }}
     />
+  );
+}
+
+const mediaIcons = { PHOTO: ImageIcon, VIDEO: Video };
+
+/**
+ * Photo / Video as two pill-shaped radio buttons: one click and both choices are visible. Nothing is preselected on a new entry,
+ * so the user has to choose (a radio group is not inside <Field>, whose <label> would select the first radio on any click).
+ */
+function MediaTypeRadios({ label, options, defaultValue }) {
+  const { state } = useFormState();
+  const error = state?.fieldErrors?.mediaType;
+  return (
+    <fieldset>
+      <legend className="mb-1 block text-sm font-medium text-foreground">
+        {label}
+        <span className="text-danger"> *</span>
+      </legend>
+      <div className="grid grid-cols-2 gap-2">
+        {options.map((option) => {
+          const Icon = mediaIcons[option.value];
+          return (
+            <label key={option.value} className="cursor-pointer">
+              <input type="radio" name="mediaType" value={option.value} required defaultChecked={defaultValue === option.value} className="peer sr-only" />
+              <span className="flex h-10 items-center justify-center gap-2 rounded-xl border border-border bg-white px-3 text-sm font-medium text-foreground transition-colors hover:bg-surface-muted peer-checked:border-primary peer-checked:bg-primary-soft peer-checked:text-primary peer-focus-visible:border-ring peer-focus-visible:ring-[3px] peer-focus-visible:ring-ring/20">
+                {Icon && <Icon className="h-4 w-4" aria-hidden />}
+                {option.label}
+              </span>
+            </label>
+          );
+        })}
+      </div>
+      {error && (
+        <p role="alert" className="mt-1 text-xs text-danger">
+          {error}
+        </p>
+      )}
+    </fieldset>
   );
 }
 
@@ -92,9 +131,7 @@ function VisitFormFields({ visit, events, disks, placeTypes, selectedPeople, ini
               options={withRecent(disks.map((d) => ({ value: d.id, label: d.isActive === false ? `${d.labelName} (inactive)` : d.labelName })), recentDiskIds)}
             />
           </Field>
-          <Field label={`3. ${labels.mediaType}`} name="mediaType" required>
-            <SearchableSelect name="mediaType" required defaultValue={visit?.mediaType ?? ""} placeholder="Select photo or video" clearable={false} options={mediaTypes} />
-          </Field>
+          <MediaTypeRadios label={`3. ${labels.mediaType}`} options={mediaTypes} defaultValue={visit?.mediaType ?? ""} />
           <Field label={`4. ${labels.folder}`} name="folderPath" required>
             <Input name="folderPath" required defaultValue={visit?.folderPath ?? ""} autoComplete="off" placeholder="e.g. 2019/March/Patel Home" />
           </Field>
