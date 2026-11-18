@@ -144,6 +144,34 @@ describe.skipIf(!HAS_DB)("users and authentication", () => {
     expect((await users.authenticate("s@example.org", "a-new-password-2")).ok).toBe(true);
   });
 
+  it("an administrator can delete another user; history stays, the user can no longer log in", async () => {
+    const staff = (await users.createUser(admin, { name: "S", username: "suser", email: "s@example.org", role: "STAFF", password: "staff-password-1" })).user;
+    await db.auditLog.create({ data: { userId: staff.id, action: "visit.create", entity: "Visit", entityId: "1" } });
+
+    expect((await users.deleteUser(admin, 999999)).ok).toBe(false);
+    expect((await users.deleteUser(admin, staff.id)).ok).toBe(true);
+    expect(await db.user.findUnique({ where: { id: staff.id } })).toBeNull();
+    expect((await users.authenticate("s@example.org", "staff-password-1")).ok).toBe(false);
+
+    const kept = await db.auditLog.findFirst({ where: { action: "visit.create" } });
+    expect(kept).not.toBeNull();
+    expect(kept.userId).toBeNull();
+    const deleted = await db.auditLog.findFirst({ where: { action: "user.delete" } });
+    expect(deleted.entityId).toBe(String(staff.id));
+    expect(JSON.stringify(deleted)).not.toMatch(/staff-password-1/);
+  });
+
+  it("refuses to delete yourself, the last active administrator, or a user who still owns indexer tokens", async () => {
+    expect((await users.deleteUser(admin, admin.id)).error).toMatch(/own account/);
+    expect((await users.deleteUser({ id: 999999 }, admin.id)).error).toMatch(/administrator/);
+    expect(await db.user.findUnique({ where: { id: admin.id } })).not.toBeNull();
+
+    const staff = (await users.createUser(admin, { name: "S", username: "suser", email: "s@example.org", role: "STAFF", password: "staff-password-1" })).user;
+    await db.indexerToken.create({ data: { name: "old", tokenHash: "hash-1", tokenPrefix: "gpa_", createdById: staff.id } });
+    expect((await users.deleteUser(admin, staff.id)).ok).toBe(false);
+    expect(await db.user.findUnique({ where: { id: staff.id } })).not.toBeNull();
+  });
+
   it("audits user management without logging passwords", async () => {
     await users.resetPassword(admin, admin.id, "a-new-password-2");
     const logs = await db.auditLog.findMany();

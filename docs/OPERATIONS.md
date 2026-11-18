@@ -32,7 +32,7 @@ Search → filters (name, surname, village, date range, event, disk, place) → 
 * **Not verified**: never confirmed by a scan; scan the disk.
 
 ## Users and passwords
-*Users* (admin): add staff with a temporary password (≥10 chars); *Edit* to rename, change role, deactivate, or set a new password (the user's other sessions end immediately). Deactivated users are locked out at once; accounts are never deleted. At least one active admin always remains.
+*Users* (admin): add staff with a temporary password (≥10 chars); *Edit* to rename, change role, deactivate, or set a new password (the user's other sessions end immediately). Deactivated users are locked out at once. The bin icon deletes a user for good: the entries they added stay (without the "added by" name) and they can no longer log in; you cannot delete yourself, and at least one active admin always remains.
 Users change their own password under *My account*.
 
 ## Indexer tokens

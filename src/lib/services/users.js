@@ -170,6 +170,29 @@ export async function updateUser(actor, id, input) {
   return ok({ user });
 }
 
+/**
+ * Deletes a user for good. Entries / Members the user created stay (their "created by" becomes empty) and old audit lines stay
+ * (without the link to the user). Refused for yourself and for the last active administrator.
+ */
+export async function deleteUser(actor, id) {
+  const current = await db.user.findUnique({ where: { id } });
+  if (!current) return fail("User not found.");
+  if (actor.id === id) return fail("You cannot delete your own account.");
+  if (await wouldRemoveLastAdmin(id, "STAFF", false)) return fail("At least one active administrator is required.");
+  // Tokens of the removed local indexer still point at their creator (Restrict). Nothing in the app uses them any more.
+  if ((await db.indexerToken.count({ where: { createdById: id } })) > 0) {
+    return fail(`"${current.name}" still owns old indexer tokens, so the account cannot be deleted. Deactivate it instead.`);
+  }
+  try {
+    await db.user.delete({ where: { id } });
+  } catch (error) {
+    if (error?.code === "P2025") return fail("User not found."); // deleted by someone else in the meantime
+    throw error;
+  }
+  await audit(actor, "user.delete", "User", id, { email: current.email, username: current.username, role: current.role });
+  return ok();
+}
+
 /** Admin sets a new password for another user. */
 export async function resetPassword(actor, id, newPassword) {
   const parsed = validate(z.object({ password: passwordField }), { password: newPassword });

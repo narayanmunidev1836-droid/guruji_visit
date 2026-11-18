@@ -71,7 +71,9 @@ export default async function UsersPage() {
                 </Td>
                 <Td className="whitespace-nowrap text-muted">{formatInstant(u.createdAt)}</Td>
                 <Td className="text-right">
-                  <UserRowActions user={u} labels={labels} />
+                  <div className="flex items-center justify-end gap-1">
+                    <UserRowActions user={u} labels={labels} canDelete={u.id !== admin.id} />
+                  </div>
                 </Td>
               </tr>
             ))}

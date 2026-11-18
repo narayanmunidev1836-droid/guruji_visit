@@ -5,7 +5,7 @@ import { runAction } from "@/lib/action";
 import { requirePermission } from "@/lib/auth/dal";
 import { ok } from "@/lib/result";
 import { formDataToObject } from "@/lib/validation";
-import { createUser, resetPassword, updateUser } from "@/lib/services/users";
+import { createUser, deleteUser, resetPassword, updateUser } from "@/lib/services/users";
 
 export async function createUserAction(_prev, formData) {
   return runAction(async () => {
@@ -25,6 +25,16 @@ export async function updateUserAction(_prev, formData) {
     if (!result.ok) return result;
     revalidatePath("/users");
     return ok({ message: "User updated." });
+  });
+}
+
+export async function deleteUserAction(id) {
+  return runAction(async () => {
+    const actor = await requirePermission("user.manage");
+    const result = await deleteUser(actor, Number(id));
+    if (!result.ok) return result;
+    revalidatePath("/users");
+    return ok();
   });
 }
 

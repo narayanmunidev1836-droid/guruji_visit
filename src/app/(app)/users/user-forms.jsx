@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Pencil } from "lucide-react";
-import { createUserAction, resetPasswordAction, updateUserAction } from "@/actions/users";
+import { createUserAction, deleteUserAction, resetPasswordAction, updateUserAction } from "@/actions/users";
 import { ActionForm, Field, FormActions, SubmitButton, useFormState } from "@/components/ui/form";
+import { ConfirmDeleteButton } from "@/components/ui/confirm-delete-button";
 import { Modal } from "@/components/ui/modal";
 import { Input, Select } from "@/components/ui/inputs";
 import { MobileInput } from "@/components/ui/mobile-input";
@@ -69,8 +70,11 @@ function CloseWhenSaved({ onDone }) {
   return null;
 }
 
-/** Pencil icon in the table row: the user's edit form (details, rights, password) opens in a dialog. */
-export function UserRowActions({ user, labels }) {
+/**
+ * Pencil icon in the table row: the user's edit form (details, rights, password) opens in a dialog. The bin deletes the user
+ * (not offered for your own row; the server refuses it too, and the last active administrator cannot be deleted either).
+ */
+export function UserRowActions({ user, labels, canDelete = true }) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -83,6 +87,14 @@ export function UserRowActions({ user, labels }) {
       >
         <Pencil className="h-4 w-4" aria-hidden />
       </button>
+      {canDelete && (
+        <ConfirmDeleteButton
+          action={deleteUserAction}
+          id={user.id}
+          confirmText={`Delete the user "${user.name}"? They can no longer log in. Entries they added stay, but will no longer show who added them. This cannot be undone.`}
+          successMessage="User deleted."
+        />
+      )}
       {open && (
         <Modal title={`${labels.edit}: ${user.name}`} onClose={() => setOpen(false)}>
           <p className="-mt-2 mb-4 text-sm text-muted">{user.email}</p>

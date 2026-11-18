@@ -31,7 +31,7 @@ After a disk is indexed its photos are **not** attached to anyone (the system ne
 ## Administrators only
 * **Events** — add names, rename, deactivate/re-activate (never deleted; old records keep them).
 * **Hard Disks** — register each disk with its sticker label **before** indexing (admin or staff); rename; deactivate (admin only); *Unlink physical disk* if a disk was reformatted.
-* **Users** — add staff, set role, reset password, deactivate. **Settings** — indexer tokens and the audit log.
+* **Users** — add staff, set role, reset password, deactivate, delete. **Settings** — indexer tokens and the audit log.
 * **Scans** (everyone can view) — history of indexing runs with counts and errors.
 
 ## Good habits

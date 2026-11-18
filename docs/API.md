@@ -52,7 +52,7 @@ Search URL parameters (`/search`): `q, name, fatherName, surname, gam, taluko, j
 | `disks.js` | `createDiskAction` (`disk.create`: ADMIN+STAFF); `updateDiskAction`, `toggleDiskAction`, `deleteDiskAction` (`disk.manage`: ADMIN, or STAFF with the *Add hard disks* grant) | see left |
 | `visits.js` | `createVisitAction`, `updateVisitAction`, `attachPhotosAction`, `detachPhotosAction` | `visit.write` |
 | `photos.js` | `updatePhotoNotesAction`, `linkPhotoToVisitAction`, `unlinkPhotoAction` | `photo.write` |
-| `users.js` | `createUserAction`, `updateUserAction`, `resetPasswordAction` | `user.manage` |
+| `users.js` | `createUserAction`, `updateUserAction`, `deleteUserAction`, `resetPasswordAction` | `user.manage` |
 | `tokens.js` | `createTokenAction` (returns raw token once), `revokeTokenAction` | `token.manage` |
 
 Permission matrix: `src/lib/permissions.js` (`haribhagat.write`, `visit.write`, `photo.write`, `disk.create`, `event.create` → ADMIN+STAFF; `event.manage`, `disk.manage`, `user.manage`, `token.manage`, `audit.view` → ADMIN).
